@@ -65,7 +65,7 @@ class HomeController extends Controller
             $filter = $request->filter ?? 'week';
             $type   = $request->type ?? 'line';
 
-            $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+            $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'AED';
             $currecy = currencyArray($currency_code);
 
             $data['currency_symbol'] = $currecy['symbol'] ?? '$';

@@ -428,7 +428,7 @@ function getPriceFormat($price)
         $price = 0;
     }
     
-    $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+    $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'AED';
     $currecy = currencyArray($currency_code);
 
     $code = $currecy['symbol'] ?? '$';
@@ -457,7 +457,7 @@ function currencyArray($code = null)
     $currency = [
         [ 'code' => 'AED', 'name' => 'United Arab Emirates dirham', 'symbol' => 'د.إ'],
         [ 'code' => 'AFN', 'name' => 'Afghan afghani', 'symbol' => '؋'],
-        [ 'code' => 'ALL', 'name' => 'Albanian lek', 'symbol' => 'L'],
+        [ 'code' => 'ALL', 'name' => 'Albanian lek', 'symbol' => 'L'],  
         [ 'code' => 'AMD', 'name' => 'Armenian dram', 'symbol' => 'AMD'],
         [ 'code' => 'ANG', 'name' => 'Netherlands Antillean guilder', 'symbol' => 'ƒ'],
         [ 'code' => 'AOA', 'name' => 'Angolan kwanza', 'symbol' => 'Kz'],
@@ -2425,7 +2425,7 @@ function humanReadableNumber($number, $precision = 0, $abbreviate = false ) {
         $number = 0;
     }
     
-    $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+    $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'AED';
     $currecy = currencyArray($currency_code);
 
     $code = $currecy['symbol'] ?? '$';

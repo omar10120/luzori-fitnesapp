@@ -121,7 +121,7 @@ class DashboardController extends Controller
         $response = [
             'data' => $setting,
         ];
-        $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+        $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'AED';
         $currency = currencyArray($currency_code);
         $response['currency_setting'] = [
             'name' => $currency['name'] ?? 'United States (US) dollar',
