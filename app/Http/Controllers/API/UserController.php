@@ -114,6 +114,7 @@ class UserController extends Controller
     public function changePassword(Request $request)
     {
         $user = User::where('id',auth()->id())->first();
+        
 
         if($user == "") {
             $message = __('message.not_found_entry', ['name' => __('message.user') ]);

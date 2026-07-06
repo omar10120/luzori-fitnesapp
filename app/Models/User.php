@@ -76,6 +76,16 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $this->hasMany(ChatgptFitBot::class, 'user_id', 'id');
     }
 
+    public function foodAnalysisRequests()
+    {
+        return $this->hasMany(FoodAnalysisRequest::class, 'user_id', 'id');
+    }
+
+    public function foodAnalysisUsages()
+    {
+        return $this->hasMany(FoodAnalysisUsage::class, 'user_id', 'id');
+    }
+
     public function userPreference()
     {
         return $this->hasMany(UserPreference::class, 'user_id', 'id');
