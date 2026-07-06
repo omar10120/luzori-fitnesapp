@@ -32,8 +32,6 @@ class FoodRecognitionService
             );
         }
 
-        $imagePath = $file->store('food-recognition', 'public');
-
         $url = config('caloriemama.url') . '?user_key=' . config('caloriemama.key');
 
         try {
@@ -47,7 +45,7 @@ class FoodRecognitionService
                 ->post($url);
         } catch (\Throwable $e) {
             Log::error('Food recognition request failed: ' . $e->getMessage());
-            return $this->persistAndBuildResult($user, $usage, $imagePath, null, 500, $e->getMessage());
+            return $this->persistAndBuildResult($user, $usage, $file, null, 500, $e->getMessage());
         }
 
         $decodedResponse = $response->json();
@@ -59,20 +57,20 @@ class FoodRecognitionService
             return $this->persistAndBuildResult(
                 $user,
                 $usage,
-                $imagePath,
+                $file,
                 $decodedResponse,
                 $response->status(),
                 data_get($decodedResponse, 'message', $response->body() ?: 'Food recognition request failed.')
             );
         }
 
-        return $this->persistAndBuildResult($user, $usage, $imagePath, $decodedResponse, 200);
+        return $this->persistAndBuildResult($user, $usage, $file, $decodedResponse, 200);
     }
 
     protected function persistAndBuildResult(
         User $user,
         FoodAnalysisUsage $usage,
-        string $imagePath,
+        UploadedFile $file,
         ?array $decodedResponse,
         int $httpStatus,
         ?string $errorMessage = null
@@ -81,7 +79,7 @@ class FoodRecognitionService
         $nutrition = data_get($topItem, 'nutrition', []);
         $isSuccess = $httpStatus >= 200 && $httpStatus < 300;
 
-        $history = DB::transaction(function () use ($user, $usage, $imagePath, $decodedResponse, $topItem, $nutrition, $isSuccess) {
+        $history = DB::transaction(function () use ($user, $usage, $file, $decodedResponse, $topItem, $nutrition, $isSuccess) {
             $lockedUsage = FoodAnalysisUsage::where('id', $usage->id)->lockForUpdate()->first();
 
             if ($lockedUsage->used >= $lockedUsage->daily_limit) {
@@ -96,7 +94,6 @@ class FoodRecognitionService
             $history = FoodAnalysisRequest::create([
                 'user_id'       => $user->id,
                 'provider'      => 'caloriemama',
-                'image_path'    => $imagePath,
                 'is_food'       => data_get($decodedResponse, 'is_food'),
                 'top_food_name' => data_get($topItem, 'name'),
                 'top_group'     => data_get($topItem, 'group'),
@@ -108,6 +105,8 @@ class FoodRecognitionService
                 'response_json' => $decodedResponse,
                 'status'        => $isSuccess ? FoodAnalysisRequest::STATUS_SUCCESS : FoodAnalysisRequest::STATUS_FAILED,
             ]);
+
+            storeMediaFile($history, $file, 'food_recognition_image');
 
             $lockedUsage->increment('used');
 

@@ -3,16 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class FoodAnalysisRequest extends Model
+class FoodAnalysisRequest extends Model implements HasMedia
 {
+    use InteractsWithMedia;
+
     const STATUS_SUCCESS = 'success';
     const STATUS_FAILED = 'failed';
 
     protected $fillable = [
         'user_id',
         'provider',
-        'image_path',
         'is_food',
         'top_food_name',
         'top_group',

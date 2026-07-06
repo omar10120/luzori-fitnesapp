@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('provider')->default('caloriemama');
-            $table->string('image_path');
             $table->boolean('is_food')->nullable();
             $table->string('top_food_name')->nullable();
             $table->string('top_group')->nullable();
