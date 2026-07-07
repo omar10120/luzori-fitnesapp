@@ -122,6 +122,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('get-score', [ API\GameDataController::class, 'getScore']);
 
     Route::post('food-recognition', [ API\FoodRecognitionController::class, 'recognize']);
+    Route::get('food-recognition-list', [ API\FoodRecognitionController::class, 'getList']);
+    Route::get('food-recognition-detail', [ API\FoodRecognitionController::class, 'getDetail']);
     
     Route::get('userpost-list', [ API\PostingController::class, 'getPostList']);
     Route::get('userpost-detail', [ API\PostingController::class, 'getPostDetail']);
