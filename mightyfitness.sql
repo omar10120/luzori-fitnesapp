@@ -1566,7 +1566,11 @@ INSERT INTO `permissions` (`id`, `name`, `title`, `guard_name`, `parent_id`, `cr
 (136, 'bannerslider-list', 'Bannerslider List', 'web', 135, '2026-02-09 05:31:33', '2026-02-09 05:31:33'),
 (137, 'bannerslider-add', 'Bannerslider Add', 'web', 135, '2026-02-09 05:31:33', '2026-02-09 05:31:33'),
 (138, 'bannerslider-edit', 'Bannerslider Edit', 'web', 135, '2026-02-09 05:31:33', '2026-02-09 05:31:33'),
-(139, 'bannerslider-delete', 'Bannerslider Delete', 'web', 135, '2026-02-09 05:31:33', '2026-02-09 05:31:33');
+(139, 'bannerslider-delete', 'Bannerslider Delete', 'web', 135, '2026-02-09 05:31:33', '2026-02-09 05:31:33'),
+(140, 'food-recognition-list', 'Food Recognition List', 'web', NULL, '2026-07-07 05:31:33', '2026-07-07 05:31:33'),
+(141, 'food-recognition-add', 'Food Recognition Add', 'web', NULL, '2026-07-07 05:31:33', '2026-07-07 05:31:33'),
+(142, 'food-recognition-edit', 'Food Recognition Edit', 'web', NULL, '2026-07-07 05:31:33', '2026-07-07 05:31:33'),
+(143, 'food-recognition-delete', 'Food Recognition Delete', 'web', NULL, '2026-07-07 05:31:33', '2026-07-07 05:31:33');
 
 -- --------------------------------------------------------
 
@@ -1907,7 +1911,11 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (136, 1),
 (137, 1),
 (138, 1),
-(139, 1);
+(139, 1),
+(140, 1),
+(141, 1),
+(142, 1),
+(143, 1);
 
 -- --------------------------------------------------------
 

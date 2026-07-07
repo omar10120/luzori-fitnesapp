@@ -618,4 +618,6 @@ return [
     'client_id' => 'معرّف العميل',
     'client_secret' => 'سر العميل',
     'base_url' => 'الرابط الأساسي',
+    'foodrecognition' => 'تحليل الغذاء',
+
 ];

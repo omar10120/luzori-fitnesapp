@@ -97,6 +97,7 @@ class UsersDataTable extends DataTable
             ['data' => 'email', 'name' => 'email', 'title' => __('message.email')],
             ['data' => 'userProfile.age', 'name' => 'userProfile.age', 'title' => __('message.age'), 'orderable' => false],
             ['data' => 'status', 'name' => 'status', 'title' => __('message.status')], 
+            ['data' => 'limit', 'name' => 'limit', 'title' => __('message.limit')], 
             ['data' => 'created_at', 'name' => 'created_at', 'title' => __('message.created_at')],
             ['data' => 'updated_at', 'name' => 'updated_at', 'title' => __('message.updated_at')],
 

@@ -77,4 +77,17 @@ class FoodRecognitionController extends Controller
             'data' => new FoodAnalysisRequestResource($history),
         ]);
     }
+    public function getAssignFoodRecognitionList()
+    {
+        $foodRecognition = FoodRecognition::where('user_id', auth()->id())->orderBy('id', 'desc')->paginate(10);
+
+        $items = FoodRecognitionResource::collection($foodRecognition);
+
+        $response = [
+            'pagination'    => json_pagination_response($items),
+            'data'          => $items,
+        ];
+
+        return json_custom_response($response);
+    }
 }

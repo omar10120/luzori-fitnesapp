@@ -174,6 +174,9 @@
                 ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
                 ->link->attr(['class' => activeRoute(route('categorydiet.index')) || request()->routeIs('categorydiet.create') || request()->routeIs('categorydiet.edit') ? 'nav-link active' : 'nav-link']);
 
+         
+
+                
         $menu->add('<span class="item-name">'.__('message.level').'</span>', ['class' => ''])
             ->prepend('<i class="icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -342,11 +345,20 @@
                 ->data('permission', 'subscription-list')
                 ->link->attr(['class' => 'nav-link' ])
                 ->href('#subscription');
-
+            
             $menu->subscription->add('<span class="item-name">'.__('message.list_form_title',['form' => __('message.subscription')]).'</span>', ['route' => 'subscription.index'])
                 ->data('permission', 'subscription-list')
                 ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
                 ->link->attr(['class' => activeRoute(route('subscription.index')) ? 'nav-link active' : 'nav-link']);
+
+        $menu->add('<span class="item-name">'.__('message.foodrecognition',['form' => __('message.subscription')]).'</span>', ['route' => 'food-recognition.index'])
+            ->prepend('<i class="icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 3C8.13401 3 5 6.13401 5 10C5 14.4183 10.25 20.25 11.0194 21.0632C11.5447 21.6189 12.4553 21.6189 12.9806 21.0632C13.75 20.25 19 14.4183 19 10C19 6.13401 15.866 3 12 3Z" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M14.5 9.5C14.5 8.11929 13.3807 7 12 7C10.6193 7 9.5 8.11929 9.5 9.5C9.5 10.8807 10.6193 12 12 12C13.3807 12 14.5 10.8807 14.5 9.5Z" stroke="currentColor" stroke-width="1.5"/>
+                    </svg></i>')
+            ->data('permission', 'subscription-list')
+            ->link->attr(['class' => activeRoute(route('food-recognition.index')) ? 'nav-link active' : 'nav-link']);
 
         $menu->add('<span class="item-name">'.__('message.posting').'</span>', ['class' => ''])
                 ->prepend('<i class="icon">

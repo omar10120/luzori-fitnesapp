@@ -640,6 +640,16 @@ class PermissionTableSeeder extends Seeder
                 'title' => 'Website Section List',
                 'parent_id' => 128,
             ],
+            [
+                'name' => 'food-recognition',
+                'title' => 'Food Recognition',
+                'parent_id' => NUll,
+            ],
+            [
+                'name' => 'food-recognition-list',
+                'title' => 'Food Recognition List',
+                'parent_id' => 130,
+            ],
         ];
 
         foreach ($permissions as $value) {

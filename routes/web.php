@@ -54,7 +54,6 @@ use App\Http\Controllers\IngredientUnitConversionController;
 use App\Http\Controllers\RecipeCategoryContoller;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RecipeTagContoller;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -137,6 +136,8 @@ Route::group(['middleware' => [ 'auth', 'useractive' ]], function () {
     Route::post('assignworkout-delete',[ UserController::class, 'assignWorkoutDestroy' ])->name('delete.assignworkout');
 
     Route::get('assignworkout-list',[ UserController::class, 'getAssignWorkoutList'])->name('get.assignworkoutlist');
+    Route::get('food-recognition-list',[ UserController::class, 'getFoodRecognitionList'])->name('get.foodrecognitionlist');
+    Route::get('food-recognition',[ UserController::class, 'foodRecognitionIndex'])->name('food-recognition.index');
 
     //Fitness CategoryDiet
     Route::resource('categorydiet', CategoryDietController::class);

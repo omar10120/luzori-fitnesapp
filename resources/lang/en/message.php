@@ -644,5 +644,6 @@ return [
     'client_id' => 'Client ID',
     'client_secret' => 'Client Secret',
     'base_url' => 'Base URL',
+    'foodrecognition' => 'Food Recognition',
 
 ];

@@ -9,6 +9,7 @@ use App\Models\AssignDiet;
 use App\Models\AssignWorkout;
 use App\Models\Diet;
 use App\Models\Workout;
+use App\Models\FoodAnalysisRequest;
 use App\Helpers\AuthHelper;
 use App\Models\Role;
 use App\Http\Requests\UserRequest;
@@ -282,6 +283,27 @@ class UserController extends Controller
         $data = Workout::myWorkout($user_id)->orderBy('id', 'desc')->get();
         $view = view('users.assign-workout-list', compact('user_id', 'data'))->render();
         return response()->json(['data' => $view, 'status' => true]);
+    }
+
+    public function getFoodRecognitionList(Request $request)
+    {
+        $user_id = request('user_id');
+        $data = FoodAnalysisRequest::where('user_id', $user_id)->latest()->get();
+        $view = view('users.subscription-list', compact('user_id', 'data'))->render();
+        return response()->json(['data' => $view, 'status' => true]);
+    }
+
+    public function foodRecognitionIndex(Request $request)
+    {
+        if (!auth()->user()->can('subscription-list')) {
+            $message = __('message.permission_denied_for_account');
+            return redirect()->back()->withErrors($message);
+        }
+
+        $pageTitle = 'Food Recognition';
+        $data = FoodAnalysisRequest::with('user')->latest()->paginate(20);
+
+        return view('users.food-recognition-index', compact('pageTitle', 'data'));
     }
 
     public function assignDietDestroy(Request $request)

@@ -5,6 +5,8 @@
             url = "{{ route('get.assigndietlist') }}";
             if( type == 'workout' ) {
                 url = "{{ route('get.assignworkoutlist') }}";
+            } else if (type == 'food-recognition') {
+                url = "{{ route('get.foodrecognitionlist') }}";
             }
             
             $.ajax({
@@ -22,6 +24,7 @@
             @if ($type == 'detail')
             getAssignList('diet');
             getAssignList('workout');
+            getAssignList('food-recognition');
             @endif
 
             @if($type == 'matrix')
@@ -531,6 +534,31 @@
                                 </tr>
                             </thead>
                             <tbody id="workout-data">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <div class="header-title">
+                        <h4 class="card-title">{{ __('Food Recognition') }}</h4>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive mt-4 assign-profile-max-height">
+                        <table id="basic-table" class="table table-striped mb-0" role="grid">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('message.image') }}</th>
+                                    <th>{{ __('message.title') }}</th>
+                                    <th>{{ __('message.status') }}</th>
+                                    <th>{{ __('message.date') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="food-recognition-data">
                             </tbody>
                         </table>
                     </div>
