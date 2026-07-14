@@ -68,7 +68,7 @@ class HomeController extends Controller
             $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'AED';
             $currecy = currencyArray($currency_code);
 
-            $data['currency_symbol'] = $currecy['symbol'] ?? '$';
+            $data['currency_symbol'] = $currecy['symbol'] ?? 'UAE';
             $data['currency_position'] = SettingData('CURRENCY', 'CURRENCY_POSITION') ?? 'left';
 
             if ($request->ajax()) {

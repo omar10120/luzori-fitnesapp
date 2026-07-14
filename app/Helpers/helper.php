@@ -431,7 +431,7 @@ function getPriceFormat($price)
     $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'AED';
     $currecy = currencyArray($currency_code);
 
-    $code = $currecy['symbol'] ?? '$';
+    $code = $currecy['symbol'] ?? 'AED';
     $position = SettingData('CURRENCY', 'CURRENCY_POSITION') ?? 'left';
     
     if ($position == 'left') {
@@ -2428,7 +2428,7 @@ function humanReadableNumber($number, $precision = 0, $abbreviate = false ) {
     $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'AED';
     $currecy = currencyArray($currency_code);
 
-    $code = $currecy['symbol'] ?? '$';
+    $code = $currecy['symbol'] ?? 'AED';
     $position = SettingData('CURRENCY', 'CURRENCY_POSITION') ?? 'left';
     $amount = Number::forHumans($number, $precision, null, $abbreviate );
     if ($position == 'left') {

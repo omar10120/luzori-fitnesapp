@@ -3,7 +3,7 @@
 @if( $data['subscription_setting'] == 1 && $auth_user->can('subscription-list') )
 <script>
 let currencyPosition = @json($data['currency_position'] ?? 'left');
-let currencySymbol = @json($data['currency_symbol'] ?? '$');
+let currencySymbol = @json($data['currency_symbol'] ?? 'UAE');
 
 function renderSubscriptionAmount(amount) {
 	const formattedAmount = Number(amount || 0).toFixed(2);
