@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder
             // RoleTableSeeder::class,
             UserTableSeeder::class,
             AppSettingTableSeeder::class,
+            AdviceSeeder::class,
+            AdviceOptionSeeder::class,
+            ProgramSeeder::class,
           
         ]);
         
