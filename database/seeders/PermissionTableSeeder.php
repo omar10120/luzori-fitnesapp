@@ -676,6 +676,31 @@ class PermissionTableSeeder extends Seeder
                 'parent_id' => 132,
             ],
             [
+                'name' => 'adviceoption',
+                'title' => 'Advice Option',
+                'parent_id' => NUll,
+            ],
+            [
+                'name' => 'adviceoption-list',
+                'title' => 'Advice Option List',
+                'parent_id' => 137,
+            ],
+            [
+                'name' => 'adviceoption-add',
+                'title' => 'Advice Option Add',
+                'parent_id' => 137,
+            ],
+            [
+                'name' => 'adviceoption-edit',
+                'title' => 'Advice Option Edit',
+                'parent_id' => 137,
+            ],
+            [
+                'name' => 'adviceoption-delete',
+                'title' => 'Advice Option Delete',
+                'parent_id' => 137,
+            ],
+            [
                 'name' => 'program',
                 'title' => 'Program',
                 'parent_id' => NUll,
@@ -683,22 +708,22 @@ class PermissionTableSeeder extends Seeder
             [
                 'name' => 'program-list',
                 'title' => 'Program List',
-                'parent_id' => 137,
+                'parent_id' => 142,
             ],
             [
                 'name' => 'program-add',
                 'title' => 'Program Add',
-                'parent_id' => 137,
+                'parent_id' => 142,
             ],
             [
                 'name' => 'program-edit',
                 'title' => 'Program Edit',
-                'parent_id' => 137,
+                'parent_id' => 142,
             ],
             [
                 'name' => 'program-delete',
                 'title' => 'Program Delete',
-                'parent_id' => 137,
+                'parent_id' => 142,
             ],
         ];
 

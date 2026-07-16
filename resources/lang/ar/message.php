@@ -620,8 +620,11 @@ return [
     'base_url' => 'الرابط الأساسي',
     'foodrecognition' => 'تحليل الغذاء',
     'advice' => 'نصيحة',
+    'advice_option' => 'خيار النصيحة',
     'program' => 'برنامج',
     'seed_text' => 'نص البذرة',
     'needed_advices' => 'النصائح المطلوبة',
+    'label' => 'التسمية',
+    'order' => 'الترتيب',
 
 ];

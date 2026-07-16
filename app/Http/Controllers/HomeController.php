@@ -11,6 +11,7 @@ use App\Models\WorkoutType;
 use App\Models\Workout;
 use App\Models\Diet;
 use App\Models\Advice;
+use App\Models\AdviceOption;
 use App\Models\Program;
 use App\Models\CategoryDiet;
 use Illuminate\Support\Facades\App;
@@ -263,6 +264,13 @@ class HomeController extends Controller
                 if ($advice) {
                     $advice->status = $request->status;
                     $advice->save();
+                }
+                break;
+            case 'adviceoption':
+                $option = AdviceOption::find($request->id);
+                if ($option) {
+                    $option->is_active = $request->status;
+                    $option->save();
                 }
                 break;
             case 'program':

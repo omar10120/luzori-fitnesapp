@@ -646,8 +646,11 @@ return [
     'base_url' => 'Base URL',
     'foodrecognition' => 'Food Recognition',
     'advice' => 'Advice',
+    'advice_option' => 'Advice Option',
     'program' => 'Program',
     'seed_text' => 'Seed Text',
     'needed_advices' => 'Needed Advices',
+    'label' => 'Label',
+    'order' => 'Order',
 
 ];

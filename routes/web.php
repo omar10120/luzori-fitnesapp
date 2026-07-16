@@ -55,6 +55,7 @@ use App\Http\Controllers\RecipeCategoryContoller;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RecipeTagContoller;
 use App\Http\Controllers\AdviceController;
+use App\Http\Controllers\AdviceOptionController;
 use App\Http\Controllers\ProgramController;
 /*
 |--------------------------------------------------------------------------
@@ -149,6 +150,7 @@ Route::group(['middleware' => [ 'auth', 'useractive' ]], function () {
 
     Route::resource('diet', DietController::class);
     Route::resource('advice', AdviceController::class);
+    Route::resource('adviceoption', AdviceOptionController::class);
     Route::resource('program', ProgramController::class);
     Route::resource('category', CategoryController::class);
 

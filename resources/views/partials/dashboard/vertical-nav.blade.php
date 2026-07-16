@@ -181,7 +181,7 @@
                         <path d="M10 22H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                     </svg></i>')
             ->nickname('advice')
-            ->data('permission', 'advice-list')
+            ->data('permission', ['advice-list', 'adviceoption-list'])
             ->link->attr(['class' => 'nav-link'])
             ->href('#advice');
 
@@ -194,6 +194,11 @@
                 ->data('permission', ['advice-add', 'advice-edit'])
                 ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
                 ->link->attr(['class' => request()->routeIs('advice.create') || request()->routeIs('advice.edit') ? 'nav-link active' : 'nav-link']);
+
+            $menu->advice->add('<span class="item-name">'.__('message.list_form_title',['form' => __('message.advice_option')]).'</span>', ['route' => 'adviceoption.index'])
+                ->data('permission', 'adviceoption-list')
+                ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
+                ->link->attr(['class' => request()->routeIs('adviceoption.*') ? 'nav-link active' : 'nav-link']);
 
         $menu->add('<span class="item-name">'.__('message.program').'</span>', ['class' => ''])
             ->prepend('<i class="icon">
