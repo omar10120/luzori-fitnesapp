@@ -645,5 +645,9 @@ return [
     'client_secret' => 'Client Secret',
     'base_url' => 'Base URL',
     'foodrecognition' => 'Food Recognition',
+    'advice' => 'Advice',
+    'program' => 'Program',
+    'seed_text' => 'Seed Text',
+    'needed_advices' => 'Needed Advices',
 
 ];

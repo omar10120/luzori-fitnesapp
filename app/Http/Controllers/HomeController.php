@@ -10,6 +10,8 @@ use App\Models\Level;
 use App\Models\WorkoutType;
 use App\Models\Workout;
 use App\Models\Diet;
+use App\Models\Advice;
+use App\Models\Program;
 use App\Models\CategoryDiet;
 use Illuminate\Support\Facades\App;
 use App\Models\BodyPart;
@@ -255,6 +257,20 @@ class HomeController extends Controller
                 $status = $request->status == 0 ? '0' : '1';
                 $user->status = $status;
                 $user->save();
+                break;
+            case 'advice':
+                $advice = Advice::find($request->id);
+                if ($advice) {
+                    $advice->status = $request->status;
+                    $advice->save();
+                }
+                break;
+            case 'program':
+                $program = Program::find($request->id);
+                if ($program) {
+                    $program->status = $request->status;
+                    $program->save();
+                }
                 break;
             default:
                     $message = 'error';

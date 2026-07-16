@@ -5,13 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-
-
 class Advice extends Model
 {
     use HasFactory;
 
+    protected $table = 'advice';
+
     protected $fillable = ['name', 'seed_text', 'status'];
+
+    protected $casts = [
+        'status' => 'boolean',
+    ];
 
     public function options()
     {
@@ -19,7 +23,6 @@ class Advice extends Model
                     ->withPivot('is_required')
                     ->withTimestamps();
     }
-
 
     public function programs()
     {

@@ -54,6 +54,8 @@ use App\Http\Controllers\IngredientUnitConversionController;
 use App\Http\Controllers\RecipeCategoryContoller;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RecipeTagContoller;
+use App\Http\Controllers\AdviceController;
+use App\Http\Controllers\ProgramController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -146,6 +148,8 @@ Route::group(['middleware' => [ 'auth', 'useractive' ]], function () {
     Route::resource('workouttype', WorkoutTypeController::class);
 
     Route::resource('diet', DietController::class);
+    Route::resource('advice', AdviceController::class);
+    Route::resource('program', ProgramController::class);
     Route::resource('category', CategoryController::class);
 
     //FitnessTags

@@ -650,6 +650,56 @@ class PermissionTableSeeder extends Seeder
                 'title' => 'Food Recognition List',
                 'parent_id' => 130,
             ],
+            [
+                'name' => 'advice',
+                'title' => 'Advice',
+                'parent_id' => NUll,
+            ],
+            [
+                'name' => 'advice-list',
+                'title' => 'Advice List',
+                'parent_id' => 132,
+            ],
+            [
+                'name' => 'advice-add',
+                'title' => 'Advice Add',
+                'parent_id' => 132,
+            ],
+            [
+                'name' => 'advice-edit',
+                'title' => 'Advice Edit',
+                'parent_id' => 132,
+            ],
+            [
+                'name' => 'advice-delete',
+                'title' => 'Advice Delete',
+                'parent_id' => 132,
+            ],
+            [
+                'name' => 'program',
+                'title' => 'Program',
+                'parent_id' => NUll,
+            ],
+            [
+                'name' => 'program-list',
+                'title' => 'Program List',
+                'parent_id' => 137,
+            ],
+            [
+                'name' => 'program-add',
+                'title' => 'Program Add',
+                'parent_id' => 137,
+            ],
+            [
+                'name' => 'program-edit',
+                'title' => 'Program Edit',
+                'parent_id' => 137,
+            ],
+            [
+                'name' => 'program-delete',
+                'title' => 'Program Delete',
+                'parent_id' => 137,
+            ],
         ];
 
         foreach ($permissions as $value) {

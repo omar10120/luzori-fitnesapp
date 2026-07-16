@@ -619,5 +619,9 @@ return [
     'client_secret' => 'سر العميل',
     'base_url' => 'الرابط الأساسي',
     'foodrecognition' => 'تحليل الغذاء',
+    'advice' => 'نصيحة',
+    'program' => 'برنامج',
+    'seed_text' => 'نص البذرة',
+    'needed_advices' => 'النصائح المطلوبة',
 
 ];
