@@ -25,6 +25,8 @@ class FoodAnalysisRequest extends Model implements HasMedia
         'total_fat',
         'total_carbs',
         'response_json',
+        'response_json_ar',
+        'lang',
         'status',
     ];
 
@@ -37,6 +39,8 @@ class FoodAnalysisRequest extends Model implements HasMedia
         'total_fat'     => 'decimal:4',
         'total_carbs'   => 'decimal:4',
         'response_json' => 'array',
+        'response_json_ar' => 'array',
+        'lang' => 'string',
     ];
 
     public function user()

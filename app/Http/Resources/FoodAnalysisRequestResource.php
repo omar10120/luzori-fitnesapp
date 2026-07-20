@@ -7,11 +7,14 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class FoodAnalysisRequestResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
+    protected bool $isArabic = false;
+
+    public function __construct($resource, bool $isArabic = false)
+    {
+        parent::__construct($resource);
+        $this->isArabic = $isArabic;
+    }
+
     public function toArray(Request $request): array
     {
         return [
@@ -27,7 +30,8 @@ class FoodAnalysisRequestResource extends JsonResource
             'total_carbs'       => $this->total_carbs,
             'status'            => $this->status,
             'image'             => getSingleMedia($this, 'food_recognition_image', null),
-            'response_json'     => $this->response_json,
+            'response_json'     => $this->isArabic ? $this->response_json_ar : $this->response_json,
+            'lang'              => $this->lang,
             'created_at'        => $this->created_at,
             'updated_at'        => $this->updated_at,
         ];

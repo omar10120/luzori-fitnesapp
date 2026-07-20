@@ -27,45 +27,38 @@ class FoodRecognitionController extends Controller
 
     public function getList(Request $request)
     {
-        $history = FoodAnalysisRequest::where('user_id', auth()->id());
-
-        $history->when(request('status'), function ($q) {
-            return $q->where('status', request('status'));
+        $locale = $request->header('Accept-Language', 'en');
+        $isArabic = str_starts_with($locale, 'ar');
+    
+        $histories = FoodAnalysisRequest::where('user_id', $request->user()->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    
+        $histories->transform(function ($item) use ($isArabic) {
+            // Use the appropriate JSON column
+            $data = $isArabic && $item->response_json_ar
+                ? $item->response_json_ar
+                : $item->response_json;
+    
+            // Build your response array, e.g.:
+            return [
+                'id'                => $item->id,
+                'top_food_name'     => $isArabic && $item->response_json_ar
+                                        ? data_get($item->response_json_ar, 'results.0.items.0.name')
+                                        : $item->top_food_name,
+                // ... other fields, maybe use the data array directly
+                'api_data'          => $data,
+            ];
         });
-
-        $history->when(request('is_food'), function ($q) {
-            return $q->where('is_food', request('is_food'));
-        });
-
-        $history->when(request('title'), function ($q) {
-            return $q->where('top_food_name', 'LIKE', '%' . request('title') . '%');
-        });
-
-        $per_page = config('constant.PER_PAGE_LIMIT');
-        if ($request->has('per_page') && !empty($request->per_page)) {
-            if (is_numeric($request->per_page)) {
-                $per_page = $request->per_page;
-            }
-            if ($request->per_page == -1) {
-                $per_page = $history->count();
-            }
-        }
-
-        $history = $history->orderBy('id', 'desc')->paginate($per_page);
-
-        $items = FoodAnalysisRequestResource::collection($history);
-
-        $response = [
-            'pagination'    => json_pagination_response($items),
-            'data'          => $items,
-        ];
-
-        return json_custom_response($response);
+    
+        return response()->json(['success' => true, 'data' => $histories]);
     }
-
     public function getDetail(Request $request)
     {
-        $history = FoodAnalysisRequest::where('user_id', auth()->id())
+        $locale = $request->header('Accept-Language', 'en');
+        
+        $isArabic = str_starts_with($locale, 'ar');
+        $history = FoodAnalysisRequest::where('user_id', $request->user()->id)
             ->where('id', $request->id)
             ->first();
 
@@ -74,7 +67,7 @@ class FoodRecognitionController extends Controller
         }
 
         return json_custom_response([
-            'data' => new FoodAnalysisRequestResource($history),
+            'data' => new FoodAnalysisRequestResource($history, $isArabic),
         ]);
     }
     public function getAssignFoodRecognitionList()
