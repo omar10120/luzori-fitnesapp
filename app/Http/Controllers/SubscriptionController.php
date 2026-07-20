@@ -96,13 +96,8 @@ class SubscriptionController extends Controller
             // $data['food_recognition_limit'] = $package_data->food_recognition_limit ?? 0;
             $data['is_follow_up'] = request('is_follow_up') == 1 ? 1 : 0;
             $data['total_amount'] = $package_data->price + ($data['is_follow_up'] == 1 ? $package_data->follow_up_price : 0);
-            $data['transaction_detail'] = [
-                'added_by' => auth()->id(),
-                'name' => auth()->user()->display_name,
-            ];
+            $data['transaction_detail'] = ['added_by' => auth()->id(),'name' => auth()->user()->display_name,];
             $data['subscription_end_date'] = $this->get_plan_expiration_date( $data['subscription_start_date'], $package_data->duration_unit, $active_plan_left_days, $package_data->duration );
-            // $data['food_recognition_limit'] = $package_data->food_recognition_limit;
-
             $data['package_data'] = $package_data ?? null;
     
             $subscription = Subscription::create($data);

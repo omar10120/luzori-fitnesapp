@@ -59,7 +59,9 @@ class SubscriptionController extends Controller
         $data['user_id'] = $user_id;
         $data['status'] = config('constant.SUBSCRIPTION_STATUS.PENDING');
         $data['subscription_start_date'] = date('Y-m-d H:i:s');
-        $data['total_amount'] = $package_data->price;
+        $data['is_follow_up'] = $data['is_follow_up'] == 1 ? 1 : 0;
+        $data['total_amount'] = $package_data->price + ($data['is_follow_up'] == 1 ? $package_data->follow_up_price : 0);
+        
 
         if($get_existing_plan)
         {
@@ -80,6 +82,7 @@ class SubscriptionController extends Controller
 
         if( $subscription->payment_status == 'paid' ) {
             $subscription->status = config('constant.SUBSCRIPTION_STATUS.ACTIVE');
+            $subscription->food_recognition_limit = $package_data->food_recognition_limit ?? 0;
             $subscription->save();
             $user->update([ 'is_subscribe' => 1 ]);
         }
