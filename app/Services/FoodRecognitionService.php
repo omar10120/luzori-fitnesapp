@@ -10,6 +10,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\Subscription;
 
 class FoodRecognitionService
 {
@@ -45,12 +46,16 @@ class FoodRecognitionService
                 ->post($url);
         } catch (\Throwable $e) {
             Log::error('Food recognition request failed: ' . $e->getMessage());
+            // No division needed here because there is no response data
             return $this->persistAndBuildResult($user, $usage, $file, null, 500, $e->getMessage());
         }
 
         $decodedResponse = $response->json();
         if (!is_array($decodedResponse)) {
             $decodedResponse = ['raw' => $response->body()];
+        } else {
+            // Divide calories ONCE before storing and returning
+            $decodedResponse = $this->divideCaloriesByTen($decodedResponse);
         }
 
         if (!$response->successful()) {
@@ -64,6 +69,7 @@ class FoodRecognitionService
             );
         }
 
+        // Success: the returned result already contains the divided api_data
         return $this->persistAndBuildResult($user, $usage, $file, $decodedResponse, 200);
     }
 
@@ -128,5 +134,18 @@ class FoodRecognitionService
         }
 
         return $result;
+    }
+
+        /**
+     * Recursively divide all 'calories' values by 10.
+     */
+    private function divideCaloriesByTen(array $data): array
+    {
+        array_walk_recursive($data, function (&$value, $key) {
+            if ($key === 'calories' && is_numeric($value)) {
+                $value = (float) $value / 10;
+            }
+        });
+        return $data;
     }
 }
