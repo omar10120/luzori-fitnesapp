@@ -14,7 +14,7 @@ class Package extends Model
     protected $casts = [
         'duration'      => 'integer',
         'price'         => 'double',
-        'follow_up_price' => 'decimal:2',
+        'follow_up_price' => 'double',
         'food_recognition_limit' => 'integer',
         'diet_id' => 'integer',
         'advice_id' => 'integer',
