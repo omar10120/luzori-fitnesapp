@@ -1,6 +1,6 @@
 @push('scripts')
     <script>
-        (function($) {
+        (function(AED) {
             $(document).ready(function(){
                 tinymceEditor('.tinymce-description',' ',function (ed) {
                 }, 450)
@@ -46,10 +46,30 @@
                                 {{ html()->label(__('message.duration').' <span class="text-danger">*</span>')->class('form-control-label') }}
                                 {{ html()->select('duration', ['1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5', '6' => '6', '7' => '7', '8' => '8', '9' => '9', '10' => '10', '11' => '11', '12' => '12' ], old('duration'))->class('form-control select2js')->attribute('required', 'required') ->id('duration') }}
                             </div>
+                            <div class="form-group col-md-4">
+                                {{ html()->label(__('message.diet'))->class('form-control-label') }}
+                                {{ html()->select('diet_id', $diets, old('diet_id'))->class('form-control select2js')->attribute('required', 'required') }}
+                            </div>
+                            <div class="form-group col-md-4">
+                                {{ html()->label(__('message.advice'))->class('form-control-label') }}
+                                {{ html()->select('advice_id', $advices, old('advice_id'))->class('form-control select2js')->attribute('required', 'required') }}
+                            </div>
+                            <div class="form-group col-md-4">
+                                {{ html()->label(__('message.exercise'))->class('form-control-label') }}
+                                {{ html()->select('exercise_id', $exercises, old('exercise_id'))->class('form-control select2js')->attribute('required', 'required') }}
+                            </div>
 
                             <div class="form-group col-md-4">
-                                {{ html()->label(__('message.price').' <span class="text-danger">($)*</span>')->class('form-control-label') }}
+                                {{ html()->label(__('message.price').' <span class="text-danger">(AED)*</span>')->class('form-control-label') }}
                                 {{ html()->number('price', old('price'))->class('form-control')->attribute('min', 0)->attribute('step', 'any')->attribute('required', 'required')->placeholder(__('message.price')) }}
+                            </div>
+                            <div class="form-group col-md-4">
+                                {{ html()->label(__('message.follow_up_price').' <span class="text-danger">(AED)*</span>')->class('form-control-label') }}
+                                {{ html()->number('follow_up_price', old('follow_up_price'))->class('form-control')->attribute('min', 0)->attribute('step', 'any')->attribute('required', 'required')->placeholder(__('message.follow_up_price')) }}
+                            </div>
+                            <div class="form-group col-md-4">
+                                {{ html()->label(__('message.food_recognition_limit'))->class('form-control-label') }}
+                                {{ html()->number('food_recognition_limit', old('food_recognition_limit'))->class('form-control')->attribute('min', 0)->attribute('step', 'any')->attribute('required', 'required')->placeholder(__('message.food_recognition_limit')) }}
                             </div>
                             <div class="form-group col-md-4">
                                 {{ html()->label(__('message.status') . ' <span class="text-danger">*</span>', 'status')->class('form-control-label') }}

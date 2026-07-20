@@ -23,6 +23,8 @@ class PackageResource  extends JsonResource
             'price'               => $this->price,
             'description'         => $this->description,
             'status'              => $this->status,
+            'food_recognition_limit'    => $this->food_recognition_limit,
+            'follow_up_price'    => $this->follow_up_price,
             'created_at'          => $this->created_at,
             'updated_at'          => $this->updated_at,
         ];

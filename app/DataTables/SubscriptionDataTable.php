@@ -39,6 +39,14 @@ class SubscriptionDataTable extends DataTable
                 $amount = getPriceFormat($total_amount->total_amount);
                 return $amount;
             })
+            ->addColumn('food_recognition_limit', function($food_recognition_limit){             
+                $amount = $food_recognition_limit->food_recognition_limit;
+                return $amount;
+            })
+            ->addColumn('is_follow_up', function($is_follow_up){             
+                $amount = $is_follow_up->is_follow_up ? __('message.yes') : __('message.no');
+                return $amount;
+            })
             ->addColumn('action', function($subscription){
                 $user_id = $subscription->user_id;
                 return view('subscription.action',compact('user_id'))->render();
@@ -109,6 +117,8 @@ class SubscriptionDataTable extends DataTable
             ['data' => 'package.name', 'name' => 'package.name', 'title' => __('message.package'), 'orderable' => false],
             ['data' => 'total_amount', 'name' => 'total_amount', 'title' => __('message.total_amount')],
             ['data' => 'payment_type', 'name' => 'payment_type', 'title' => __('message.payment_type')],
+            ['data' => 'food_recognition_limit', 'name' => 'food_recognition_limit', 'title' => __('message.food_recognition_limit')],
+            ['data' => 'is_follow_up', 'name' => 'is_follow_up', 'title' => __('message.is_follow_up')],
             ['data' => 'subscription_start_date', 'name' => 'subscription_start_date', 'title' => __('message.subscription_start_date')],
             ['data' => 'subscription_end_date', 'name' => 'subscription_end_date', 'title' => __('message.subscription_end_date')],
             ['data' => 'status', 'name' => 'status', 'title' => __('message.status')],

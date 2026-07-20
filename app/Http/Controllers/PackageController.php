@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\DataTables\PackageDataTable;
 use App\Models\Package;
+use App\Models\Diet;
+use App\Models\Advice;
+use App\Models\Exercise;
 use App\Helpers\AuthHelper;
-
+use Illuminate\Support\Facades\Log;
 use App\Http\Requests\PackageRequest;
 
 class PackageController extends Controller
@@ -42,10 +45,12 @@ class PackageController extends Controller
             $message = __('message.permission_denied_for_account');
             return redirect()->back()->withErrors($message);
         }
-
         $pageTitle = __('message.add_form_title',[ 'form' => __('message.package')]);
-
-        return view('package.form', compact('pageTitle'));
+        $diets = Diet::where('status', 'active')->orderBy('title')->pluck('title', 'id');
+        $advices = Advice::where('status', 1)->orderBy('name')->pluck('name', 'id');
+        $exercises = Exercise::where('status', 'active')->orderBy('title')->pluck('title', 'id');
+        Log::info($exercises);
+        return view('package.form', compact('pageTitle', 'diets', 'advices', 'exercises'));
     }
 
     /**
@@ -94,8 +99,11 @@ class PackageController extends Controller
 
         $data = Package::findOrFail($id);
         $pageTitle = __('message.update_form_title',[ 'form' => __('message.package') ]);
-
-        return view('package.form', compact('data','id','pageTitle'));
+        $diets = Diet::where('status', 'active')->orderBy('title')->pluck('title', 'id');
+        $advices = Advice::where('status', 1)->orderBy('name')->pluck('name', 'id');
+        $exercises = Exercise::where('status', 'active')->orderBy('title')->pluck('title', 'id');
+       
+        return view('package.form', compact('data','id','pageTitle', 'diets', 'advices', 'exercises'));
     }
 
     /**

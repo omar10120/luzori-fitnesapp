@@ -35,6 +35,15 @@ class PackageDataTable extends DataTable
                 }
                 return '<span class="text-capitalize badge bg-'.$status.'">'.$query->status.'</span>';
             })
+            ->editColumn('diet.title', function($query) {
+                return optional($query->diet)->title ?? '-';
+            })
+            ->editColumn('advice.name', function($query) {
+                return optional($query->advice)->name ?? '-';
+            })
+            ->editColumn('exercise.title', function($query) {
+                return optional($query->exercise)->title ?? '-';
+            })
             ->editColumn('duration_unit', function($package) {
                 switch ($package->duration_unit) {
                     case 'monthly':
@@ -53,6 +62,13 @@ class PackageDataTable extends DataTable
                 $price = getPriceFormat($price->price);
                 return $price;
             })
+            ->addColumn('follow_up_price', function($package) {
+                return getPriceFormat($package->follow_up_price);
+            })
+            ->addColumn('food_recognition_limit', function($package) {
+                return $package->food_recognition_limit;
+            })
+            
             ->editColumn('created_at', function ($query) {
                 return dateAgoFormate($query->created_at, true);
             })
@@ -108,7 +124,12 @@ class PackageDataTable extends DataTable
             ['data' => 'name', 'name' => 'name', 'title' => __('message.name')],
             ['data' => 'duration', 'name' => 'duration', 'title' => __('message.duration')],
             ['data' => 'duration_unit', 'name' => 'duration_unit', 'title' => __('message.duration_unit')],
+            // ['data' => 'diet.title', 'name' => 'diet.title', 'title' => __('message.diet'), 'orderable' => false],
+            // ['data' => 'advice.name', 'name' => 'advice.name', 'title' => __('message.advice'), 'orderable' => false],
+            // ['data' => 'exercise.title', 'name' => 'exercise.title', 'title' => __('message.exercise'), 'orderable' => false],
             ['data' => 'price', 'name' => 'price', 'title' => __('message.price')],
+            ['data' => 'follow_up_price', 'name' => 'follow_up_price', 'title' => __('message.follow_up_price')],
+            ['data' => 'food_recognition_limit', 'name' => 'food_recognition_limit', 'title' => __('message.food_recognition_limit')],
             ['data' => 'status', 'name' => 'status', 'title' => __('message.status')],
             ['data' => 'created_at', 'name' => 'created_at', 'title' => __('message.created_at')],
             ['data' => 'updated_at', 'name' => 'updated_at', 'title' => __('message.updated_at')],

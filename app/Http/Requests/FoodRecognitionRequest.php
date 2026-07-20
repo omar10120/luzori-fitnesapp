@@ -25,6 +25,7 @@ class FoodRecognitionRequest extends FormRequest
     {
         return [
             'media' => 'required|image|mimes:jpeg,jpg|max:10240',
+            
         ];
     }
 

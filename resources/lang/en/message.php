@@ -652,5 +652,13 @@ return [
     'needed_advices' => 'Needed Advices',
     'label' => 'Label',
     'order' => 'Order',
+    'food_recognition_limit' => 'Food Recognition Limit',
+    'follow_up_price' => 'Follow Up Price',
+    'is_follow_up' => 'Is Follow Up?',
+    'is_follow_up_option' => [
+        '0' => 'No',
+        '1' => 'Yes',
+    ],
+    'food_recognition_limit' => 'Food Recognition Limit',
 
 ];

@@ -33,12 +33,14 @@ class SubscriptionRequest  extends FormRequest
                 $rules = [
                     'user_id' => 'required',
                     'package_id' => 'required',
+                    'is_follow_up' => 'required',
                 ];
                 break;
             case 'patch':
                 $rules = [
                     'user_id' => 'required',
                     'package_id' => 'required',
+                    'is_follow_up' => 'required',
                 ];
                 break;
         }
@@ -50,7 +52,10 @@ class SubscriptionRequest  extends FormRequest
     {
         return [
             'user_id.required' => __('message.request_required',['name'=>__('message.user')]),
-            'package_id.required' => __('message.request_required',['name'=>__('message.package')])
+            'package_id.required' => __('message.request_required',['name'=>__('message.package')]),
+            'is_follow_up.required' => __('message.request_required',['name'=>__('message.is_follow_up')]),
+            'is_follow_up.in' => __('message.request_in',['name'=>__('message.is_follow_up')]),
+            'is_follow_up.boolean' => __('message.request_boolean',['name'=>__('message.is_follow_up')]),
          ];
     }
     /**

@@ -14,8 +14,8 @@ class FoodRecognitionController extends Controller
 {
     public function recognize(FoodRecognitionRequest $request, FoodRecognitionService $service)
     {
-        
-        $result = $service->recognize(auth()->user(), $request->file('media'));
+        $locale = $request->header('Accept-Language', 'en');
+        $result = $service->recognize(auth()->user(), $request->file('media'), $locale);
 
         $statusCode = $result['success'] ? 200 : ($result['http_status'] ?? 500);
 

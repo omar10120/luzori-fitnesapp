@@ -19,6 +19,10 @@
                 ->attribute('required', 'required')
             }}            
         </div>
+        <div class="form-group col-md-12">
+            {{ html()->label(__('message.is_follow_up').' <span class="text-danger">*</span>')->class('form-control-label') }}
+            {{ html()->select('is_follow_up', [ 0 => __('message.no'), 1 => __('message.yes') ], old('is_follow_up'))->class('form-control select2js') }}
+        </div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-md btn-secondary" data-bs-dismiss="modal">{{ __('message.close') }}</button>

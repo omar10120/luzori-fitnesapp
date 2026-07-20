@@ -200,7 +200,7 @@
                 ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
                 ->link->attr(['class' => request()->routeIs('adviceoption.*') ? 'nav-link active' : 'nav-link']);
 
-        $menu->add('<span class="item-name">'.__('message.program').'</span>', ['class' => ''])
+         /* $menu->add('<span class="item-name">'.__('message.program').'</span>', ['class' => ''])
             ->prepend('<i class="icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4 6.5C4 5.67157 4.67157 5 5.5 5H18.5C19.3284 5 20 5.67157 20 6.5V17.5C20 18.3284 19.3284 19 18.5 19H5.5C4.67157 19 4 18.3284 4 17.5V6.5Z" stroke="currentColor" stroke-width="1.5"/>
@@ -219,7 +219,7 @@
             $menu->program->add('<span class="item-name">'.__('message.add_form_title',['form' => __('message.program')]).'</span>', ['route' => 'program.create'])
                 ->data('permission', ['program-add', 'program-edit'])
                 ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
-                ->link->attr(['class' => request()->routeIs('program.create') || request()->routeIs('program.edit') ? 'nav-link active' : 'nav-link']);
+                ->link->attr(['class' => request()->routeIs('program.create') || request()->routeIs('program.edit') ? 'nav-link active' : 'nav-link']); */
 
                 
         $menu->add('<span class="item-name">'.__('message.level').'</span>', ['class' => ''])

@@ -10,7 +10,7 @@ use App\Models\Package;
 use App\Helpers\AuthHelper;
 use App\Traits\SubscriptionTrait;
 use App\Http\Requests\SubscriptionRequest;
-
+use Illuminate\Support\Facades\Log;
 class SubscriptionController extends Controller
 {
     /**
@@ -84,18 +84,25 @@ class SubscriptionController extends Controller
         foreach ( $user_id as $value ) {
             $user = User::where('id', $value)->first();
             $package_data = Package::where('id',request('package_id'))->first();
+            Log::info('food_recognition_limit: '.$package_data->food_recognition_limit);
+            Log::info('is_follow_up: '. $package_data->is_follow_up);
+            Log::info('package_data: '. json_encode($package_data));
             
             $active_plan_left_days = 0;
             $data['user_id'] = $value;
             $data['status'] = config('constant.SUBSCRIPTION_STATUS.PENDING');
             $data['payment_status'] = 'paid';
             $data['subscription_start_date'] = date('Y-m-d H:i:s');
-            $data['total_amount'] = $package_data->price;
+            // $data['food_recognition_limit'] = $package_data->food_recognition_limit;
+            $data['is_follow_up'] = request('is_follow_up') == 1 ? 1 : 0;
+            $data['total_amount'] = $package_data->price + ($package_data->is_follow_up ? $package_data->follow_up_price : 0);
             $data['transaction_detail'] = [
                 'added_by' => auth()->id(),
                 'name' => auth()->user()->display_name,
             ];
             $data['subscription_end_date'] = $this->get_plan_expiration_date( $data['subscription_start_date'], $package_data->duration_unit, $active_plan_left_days, $package_data->duration );
+            // $data['food_recognition_limit'] = $package_data->food_recognition_limit;
+
             $data['package_data'] = $package_data ?? null;
     
             $subscription = Subscription::create($data);
@@ -103,6 +110,7 @@ class SubscriptionController extends Controller
             if( $subscription->payment_status == 'paid' ) {
                 $subscription->status = config('constant.SUBSCRIPTION_STATUS.ACTIVE');
                 $subscription->payment_type = 'by cash';
+                $subscription->food_recognition_limit = $package_data->food_recognition_limit;
                 $subscription->save();
                 $user->update([ 'is_subscribe' => 1 ]);
             }

@@ -626,5 +626,12 @@ return [
     'needed_advices' => 'النصائح المطلوبة',
     'label' => 'التسمية',
     'order' => 'الترتيب',
-
+    'food_recognition_limit' => 'حد التحليل الغذائي',
+    'follow_up_price' => 'سعر المتابعة',
+    'is_follow_up' => 'هل هو متابعة؟',
+    'is_follow_up_option' => [
+        '0' => 'لا',
+        '1' => 'نعم',
+    ],
+    'food_recognition_limit' => 'حد التحليل الغذائي',
 ];

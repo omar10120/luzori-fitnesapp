@@ -10,14 +10,24 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Models\Subscription;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class FoodRecognitionService
 {
-    public function recognize(User $user, UploadedFile $file): array
+    /**
+     * Recognize food from an uploaded image.
+    *
+    * @param User $user
+    * @param UploadedFile $file
+    * @param string $locale  // e.g., 'en' or 'ar'
+     * @return array
+     */
+    public function recognize(User $user, UploadedFile $file, string $locale = 'en'): array
     {
+        // 1. Daily limit check
         $today = now()->toDateString();
         $dailyLimit = (int) config('caloriemama.daily_limit', 5);
+            // $dailyLimit = Subscription::where('user_id', $user->id)->where('status', 'active')->first()->food_recognition_limit;
 
         $usage = FoodAnalysisUsage::firstOrCreate(
             ['user_id' => $user->id, 'date' => $today],
@@ -33,6 +43,7 @@ class FoodRecognitionService
             );
         }
 
+        // 2. Call third‑party API
         $url = config('caloriemama.url') . '?user_key=' . config('caloriemama.key');
 
         try {
@@ -46,18 +57,21 @@ class FoodRecognitionService
                 ->post($url);
         } catch (\Throwable $e) {
             Log::error('Food recognition request failed: ' . $e->getMessage());
-            // No division needed here because there is no response data
+            // No transformation needed – just store the error
             return $this->persistAndBuildResult($user, $usage, $file, null, 500, $e->getMessage());
         }
 
+        // 3. Decode and enhance the response
         $decodedResponse = $response->json();
         if (!is_array($decodedResponse)) {
             $decodedResponse = ['raw' => $response->body()];
         } else {
-            // Divide calories ONCE before storing and returning
+            // Apply enhancements: divide calories and translate to Arabic
             $decodedResponse = $this->divideCaloriesByTen($decodedResponse);
+            $decodedResponse = $this->translateResponseToArabic($decodedResponse, $locale);
         }
 
+        // 4. Persist and build result (will use the enhanced response)
         if (!$response->successful()) {
             return $this->persistAndBuildResult(
                 $user,
@@ -69,10 +83,12 @@ class FoodRecognitionService
             );
         }
 
-        // Success: the returned result already contains the divided api_data
         return $this->persistAndBuildResult($user, $usage, $file, $decodedResponse, 200);
     }
 
+    /**
+     * Persist the analysis result and build the final response array.
+     */
     protected function persistAndBuildResult(
         User $user,
         FoodAnalysisUsage $usage,
@@ -108,7 +124,7 @@ class FoodRecognitionService
                 'protein'       => data_get($nutrition, 'protein'),
                 'total_fat'     => data_get($nutrition, 'totalFat'),
                 'total_carbs'   => data_get($nutrition, 'totalCarbs'),
-                'response_json' => $decodedResponse,
+                'response_json' => $decodedResponse, // Enhanced (divided & translated)
                 'status'        => $isSuccess ? FoodAnalysisRequest::STATUS_SUCCESS : FoodAnalysisRequest::STATUS_FAILED,
             ]);
 
@@ -124,7 +140,7 @@ class FoodRecognitionService
         $result = [
             'history'            => $history,
             'remaining_requests' => max(0, $freshUsage->daily_limit - $freshUsage->used),
-            'api_data'           => $decodedResponse,
+            'api_data'           => $decodedResponse, // Enhanced data
             'success'            => $isSuccess,
             'http_status'        => $httpStatus,
         ];
@@ -136,7 +152,7 @@ class FoodRecognitionService
         return $result;
     }
 
-        /**
+    /**
      * Recursively divide all 'calories' values by 10.
      */
     private function divideCaloriesByTen(array $data): array
@@ -147,5 +163,60 @@ class FoodRecognitionService
             }
         });
         return $data;
+    }
+
+    /**
+     * Translate relevant fields (name, group, message) to Arabic.
+     */
+    private function translateResponseToArabic(array $data, string $locale): array
+    {
+        $translator = new GoogleTranslate($locale);
+
+        // Translate top‑level message
+        if (isset($data['message']) && is_string($data['message'])) {
+            $data['message'] = $this->translateText($data['message'], $translator);
+        }
+
+        // Set language to Arabic
+        if (isset($data['lang']) && is_string($data['lang'])) {
+            $data['lang'] = $locale;
+        }
+
+        // Translate group names and item names inside 'results'
+        if (isset($data['results']) && is_array($data['results'])) {
+            foreach ($data['results'] as &$resultGroup) {
+                if (isset($resultGroup['group']) && is_string($resultGroup['group'])) {
+                    $resultGroup['group'] = $this->translateText($resultGroup['group'], $translator);
+                }
+                if (isset($resultGroup['items']) && is_array($resultGroup['items'])) {
+                    foreach ($resultGroup['items'] as &$item) {
+                        if (isset($item['name']) && is_string($item['name'])) {
+                            $item['name'] = $this->translateText($item['name'], $translator);
+                        }
+                        if (isset($item['group']) && is_string($item['group'])) {
+                            $item['group'] = $this->translateText($item['group'], $translator);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Translate a single text, falling back to original on failure.
+     */
+    private function translateText(string $text, GoogleTranslate $translator): string
+    {
+        if (empty($text)) {
+            return $text;
+        }
+        try {
+            return $translator->translate($text);
+        } catch (\Exception $e) {
+            Log::warning("Translation failed for '$text': " . $e->getMessage());
+            return $text;
+        }
     }
 }
