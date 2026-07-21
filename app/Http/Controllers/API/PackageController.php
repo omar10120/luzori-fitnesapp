@@ -11,7 +11,8 @@ class PackageController  extends Controller
 {
     public function getList(Request $request)
     {
-        $package = Package::where('status', 'active');
+        $package = Package::where('status', 'active')
+            ->availableForUser();
 
         $package->when(request('name'), function ($q) {
             return $q->where('name', 'LIKE', '%' . request('name') . '%');

@@ -68,7 +68,11 @@
                                 {{ html()->number('follow_up_price', old('follow_up_price'))->class('form-control')->attribute('min', 0)->attribute('step', 'any')->attribute('required', 'required')->placeholder(__('message.follow_up_price')) }}
                             </div>
                             <div class="form-group col-md-4">
-                                {{ html()->label(__('message.food_recognition_limit'))->class('form-control-label') }}
+                                {{ html()->label(__('message.users'))->class('form-control-label') }}
+                                {{ html()->select('users', $users, old('users'))->class('form-control select2js')->attribute('multiple', 'multiple') }}
+                            </div>
+                            <div class="form-group col-md-4">
+                                {{ html()->label(__('message.food_recognition_limit').' <span class="text-danger">*</span>', 'food_recognition_limit')->class('form-control-label') }}
                                 {{ html()->number('food_recognition_limit', old('food_recognition_limit'))->class('form-control')->attribute('min', 0)->attribute('step', 'any')->attribute('required', 'required')->placeholder(__('message.food_recognition_limit')) }}
                             </div>
                             <div class="form-group col-md-4">

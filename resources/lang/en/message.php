@@ -660,5 +660,5 @@ return [
         '1' => 'Yes',
     ],
     'food_recognition_limit' => 'Food Recognition Limit',
-
+    'users' => 'Users',
 ];

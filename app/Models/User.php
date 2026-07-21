@@ -90,6 +90,9 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     {
         return $this->hasMany(UserPreference::class, 'user_id', 'id');
     }
+    public function packages() {
+        return $this->belongsToMany(Package::class, 'assign_package_user');
+    }
 
     protected static function boot()
     {

@@ -25,4 +25,27 @@ class Package extends Model
     {
         return $query->where('status', 'active');  
     }
+
+    public function users() {
+        return $this->belongsToMany(User::class, 'assign_package_user');
+    }
+
+    /**
+     * Packages with no assigned users are public.
+     * Packages with assigned users are visible only to those users.
+     */
+    public function scopeAvailableForUser($query, $userId = null)
+    {
+        $userId = $userId ?? auth('sanctum')->id();
+
+        return $query->where(function ($q) use ($userId) {
+            $q->whereDoesntHave('users');
+
+            if ($userId) {
+                $q->orWhereHas('users', function ($users) use ($userId) {
+                    $users->where('users.id', $userId);
+                });
+            }
+        });
+    }
 }

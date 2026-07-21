@@ -8,6 +8,7 @@ use App\Models\Package;
 use App\Models\Diet;
 use App\Models\Advice;
 use App\Models\Exercise;
+use App\Models\User;
 use App\Helpers\AuthHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\PackageRequest;
@@ -49,8 +50,10 @@ class PackageController extends Controller
         $diets = Diet::where('status', 'active')->orderBy('title')->pluck('title', 'id');
         $advices = Advice::where('status', 1)->orderBy('name')->pluck('name', 'id');
         $exercises = Exercise::where('status', 'active')->orderBy('title')->pluck('title', 'id');
+        $users = User::where('status', 'active')->orderBy('username')->pluck('username', 'id');
         Log::info($exercises);
-        return view('package.form', compact('pageTitle', 'diets', 'advices', 'exercises'));
+        Log::info($users);
+        return view('package.form', compact('pageTitle', 'diets', 'advices', 'exercises', 'users'));
     }
 
     /**
@@ -67,8 +70,12 @@ class PackageController extends Controller
         }
 
         $package = Package::create($request->all());
+        Log::info($request->users);
+
 
         storeMediaFile($package,$request->package_image, 'package_image'); 
+
+        $package->users()->attach($request->users);
 
         return redirect()->route('package.index')->withSuccess(__('message.save_form', ['form' => __('message.package')]));
     }
@@ -102,8 +109,9 @@ class PackageController extends Controller
         $diets = Diet::where('status', 'active')->orderBy('title')->pluck('title', 'id');
         $advices = Advice::where('status', 1)->orderBy('name')->pluck('name', 'id');
         $exercises = Exercise::where('status', 'active')->orderBy('title')->pluck('title', 'id');
-       
-        return view('package.form', compact('data','id','pageTitle', 'diets', 'advices', 'exercises'));
+        $users = User::where('status', 'active')->orderBy('username')->pluck('username', 'id');
+        Log::info($users);
+        return view('package.form', compact('data','id','pageTitle', 'diets', 'advices', 'exercises', 'users'));
     }
 
     /**
@@ -124,6 +132,8 @@ class PackageController extends Controller
 
         // package data...
         $package->fill($request->all())->update();
+
+        $package->users()->sync($request->users ?? []);
 
         // Save package image...
         if (isset($request->package_image) && $request->package_image != null) {
