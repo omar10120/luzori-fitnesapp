@@ -24,6 +24,8 @@ class FoodRecognitionService
      */
     public function recognize(User $user, UploadedFile $file, string $locale = 'en'): array
     {
+        // $this->checkSubscription($user);
+
         $subscription = $this->getActiveSubscription($user);
         $this->assertWithinLimit($user, $subscription);
 
@@ -188,6 +190,9 @@ class FoodRecognitionService
         return $subscription;
     }
 
+    
+    
+
     protected function assertWithinLimit(User $user, Subscription $subscription): void
     {
         $limit = (int) $subscription->food_recognition_limit;
@@ -274,4 +279,19 @@ class FoodRecognitionService
             return $text;
         }
     }
+    protected function checkSubscription(User $user): void
+    {
+        $subscription = $user->subscriptionPackage;
+        Log::info('Subscription: ' . $subscription);
+        if (!$subscription || $subscription->subscription_end_date < now()) {
+            throw new HttpResponseException(
+                json_custom_response([
+                    'success' => false,
+                    'message' => 'Subscription expired.',
+                ], 403)
+            );
+        }
+    }
+
+
 }
