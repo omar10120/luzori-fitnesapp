@@ -9,13 +9,14 @@ class Subscription extends Model
 {
     use HasFactory;
    
-   protected $fillable = [ 'user_id', 'package_id', 'total_amount', 'payment_type', 'txn_id', 'transaction_detail', 'payment_status', 'subscription_start_date', 'subscription_end_date', 'package_data', 'status', 'callback','is_follow_up' ];
+   protected $fillable = [ 'user_id', 'package_id', 'total_amount', 'payment_type', 'txn_id', 'transaction_detail', 'payment_status', 'subscription_start_date', 'subscription_end_date', 'package_data', 'status', 'callback','is_follow_up', 'food_recognition_limit' ];
 
     protected $casts = [
         'user_id'  => 'integer',
         'package_id'  => 'integer',
         'total_amount' => 'double',
         'is_follow_up' => 'boolean',
+        'food_recognition_limit' => 'integer',
     ];
     
     public function user()

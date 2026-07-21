@@ -67,6 +67,11 @@ class UserController extends Controller
                 $message = __('message.account_banned');
                 return json_message_response($message,400);
             }
+            if( $user->status == 'pending' ) {
+                $message = __('message.account_pending');
+                return json_message_response($message,400);
+            }
+            
 
             if(request('player_id') != null && request('player_id') != "nil"){
                 $user->player_id = request('player_id');

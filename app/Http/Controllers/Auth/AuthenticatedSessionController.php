@@ -40,6 +40,7 @@ class AuthenticatedSessionController extends Controller
         if( !$auth_user->hasRole('user') ) {
             $this->saveLoginHistory($auth_user);
         }
+        
 
         return redirect(RouteServiceProvider::HOME);
     }

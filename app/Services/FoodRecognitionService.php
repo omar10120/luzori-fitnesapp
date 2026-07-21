@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\FoodAnalysisRequest;
-use App\Models\FoodAnalysisUsage;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\UploadedFile;
@@ -24,25 +24,10 @@ class FoodRecognitionService
      */
     public function recognize(User $user, UploadedFile $file, string $locale = 'en'): array
     {
-        // 1. Daily limit check
-        $today = now()->toDateString();
-        $dailyLimit = (int) config('caloriemama.daily_limit', 5);
+        $subscription = $this->getActiveSubscription($user);
+        $this->assertWithinLimit($user, $subscription);
 
-        $usage = FoodAnalysisUsage::firstOrCreate(
-            ['user_id' => $user->id, 'date' => $today],
-            ['used' => 0, 'daily_limit' => $dailyLimit]
-        );
-
-        if ($usage->used >= $usage->daily_limit) {
-            throw new HttpResponseException(
-                json_custom_response([
-                    'success' => false,
-                    'message' => 'Daily food recognition limit reached.',
-                ], 429)
-            );
-        }
-
-        // 2. Call third‑party API
+        // Call third‑party API
         $url = config('caloriemama.url') . '?user_key=' . config('caloriemama.key');
 
         try {
@@ -56,45 +41,39 @@ class FoodRecognitionService
                 ->post($url);
         } catch (\Throwable $e) {
             Log::error('Food recognition request failed: ' . $e->getMessage());
-            // Store error without translation
             return $this->persistAndBuildResult(
                 $user,
-                $usage,
+                $subscription,
                 $file,
-                null,       // English response (null)
-                null,       // Arabic response (null)
+                null,
+                null,
                 500,
                 $e->getMessage(),
                 'en'
             );
         }
 
-        // 3. Decode and enhance the response
         $decodedResponse = $response->json();
         if (!is_array($decodedResponse)) {
             $decodedResponse = ['raw' => $response->body()];
         }
 
-        // Always divide calories by 10 (business rule)
         $dividedEnglish = $this->divideCaloriesByTen($decodedResponse);
 
-        // 4. Determine if Arabic translation is needed
         $shouldTranslate = str_starts_with($locale, 'ar');
         $arabicResponse = null;
 
         if ($shouldTranslate) {
             $arabicResponse = $this->translateResponseToLanguage($dividedEnglish, 'ar');
-            // Also translate the top-level message for the client
             if (isset($dividedEnglish['message']) && is_string($dividedEnglish['message'])) {
                 $arabicResponse['message'] = $this->translateText($dividedEnglish['message'], new GoogleTranslate('ar'));
             }
         }
 
-        // 5. Persist both versions (English and Arabic if translated)
         if (!$response->successful()) {
             return $this->persistAndBuildResult(
                 $user,
-                $usage,
+                $subscription,
                 $file,
                 $dividedEnglish,
                 $arabicResponse,
@@ -106,7 +85,7 @@ class FoodRecognitionService
 
         return $this->persistAndBuildResult(
             $user,
-            $usage,
+            $subscription,
             $file,
             $dividedEnglish,
             $arabicResponse,
@@ -118,20 +97,10 @@ class FoodRecognitionService
 
     /**
      * Persist the analysis result and build the final response array.
-     *
-     * @param User $user
-     * @param FoodAnalysisUsage $usage
-     * @param UploadedFile $file
-     * @param array|null $englishResponse   // Divided, untranslated
-     * @param array|null $arabicResponse    // Divided, translated (nullable)
-     * @param int $httpStatus
-     * @param string|null $errorMessage
-     * @param string $lang                  // The language requested ('en' or 'ar')
-     * @return array
      */
     protected function persistAndBuildResult(
         User $user,
-        FoodAnalysisUsage $usage,
+        Subscription $subscription,
         UploadedFile $file,
         ?array $englishResponse,
         ?array $arabicResponse,
@@ -145,7 +114,7 @@ class FoodRecognitionService
 
         $history = DB::transaction(function () use (
             $user,
-            $usage,
+            $subscription,
             $file,
             $englishResponse,
             $arabicResponse,
@@ -154,16 +123,8 @@ class FoodRecognitionService
             $isSuccess,
             $lang
         ) {
-            $lockedUsage = FoodAnalysisUsage::where('id', $usage->id)->lockForUpdate()->first();
-
-            if ($lockedUsage->used >= $lockedUsage->daily_limit) {
-                throw new HttpResponseException(
-                    json_custom_response([
-                        'success' => false,
-                        'message' => 'Daily food recognition limit reached.',
-                    ], 429)
-                );
-            }
+            $lockedSubscription = Subscription::where('id', $subscription->id)->lockForUpdate()->first();
+            $this->assertWithinLimit($user, $lockedSubscription);
 
             $history = FoodAnalysisRequest::create([
                 'user_id'          => $user->id,
@@ -176,34 +137,31 @@ class FoodRecognitionService
                 'protein'          => data_get($nutrition, 'protein'),
                 'total_fat'        => data_get($nutrition, 'totalFat'),
                 'total_carbs'      => data_get($nutrition, 'totalCarbs'),
-                'response_json'    => $englishResponse,  // Always English, divided
-                'response_json_ar' => $arabicResponse,   // Arabic, divided (or null)
-                'lang'             => $lang,             // The requested language
+                'response_json'    => $englishResponse,
+                'response_json_ar' => $arabicResponse,
+                'lang'             => $lang,
                 'status'           => $isSuccess ? FoodAnalysisRequest::STATUS_SUCCESS : FoodAnalysisRequest::STATUS_FAILED,
             ]);
 
             storeMediaFile($history, $file, 'food_recognition_image');
 
-            $lockedUsage->increment('used');
-
             return $history;
         });
 
-        $freshUsage = $usage->fresh();
+        $used = $this->subscriptionUsageCount($user, $subscription);
+        $limit = (int) $subscription->food_recognition_limit;
 
-        // Choose which version to return to the client based on the requested language
         $clientData = ($lang === 'ar' && $arabicResponse) ? $arabicResponse : $englishResponse;
 
         $result = [
             'history'            => $history,
-            'remaining_requests' => max(0, $freshUsage->daily_limit - $freshUsage->used),
+            'remaining_requests' => max(0, $limit - $used),
             'api_data'           => $clientData,
             'success'            => $isSuccess,
             'http_status'        => $httpStatus,
         ];
 
         if (!$isSuccess && $errorMessage) {
-            // If Arabic was requested, translate the error message too
             if ($lang === 'ar') {
                 $result['message'] = $this->translateText($errorMessage, new GoogleTranslate('ar'));
             } else {
@@ -212,6 +170,47 @@ class FoodRecognitionService
         }
 
         return $result;
+    }
+
+    protected function getActiveSubscription(User $user): Subscription
+    {
+        $subscription = $user->subscriptionPackage;
+
+        if (!$subscription) {
+            throw new HttpResponseException(
+                json_custom_response([
+                    'success' => false,
+                    'message' => 'Active subscription required for food recognition.',
+                ], 403)
+            );
+        }
+
+        return $subscription;
+    }
+
+    protected function assertWithinLimit(User $user, Subscription $subscription): void
+    {
+        $limit = (int) $subscription->food_recognition_limit;
+        $used = $this->subscriptionUsageCount($user, $subscription);
+
+        if ($limit <= 0 || $used >= $limit) {
+            throw new HttpResponseException(
+                json_custom_response([
+                    'success' => false,
+                    'message' => 'Food recognition limit reached for your subscription.',
+                ], 429)
+            );
+        }
+    }
+
+    protected function subscriptionUsageCount(User $user, Subscription $subscription): int
+    {
+        return FoodAnalysisRequest::where('user_id', $user->id)
+            ->where('created_at', '>=', $subscription->subscription_start_date)
+            ->when($subscription->subscription_end_date, function ($q) use ($subscription) {
+                $q->where('created_at', '<=', $subscription->subscription_end_date);
+            })
+            ->count();
     }
 
     /**
@@ -234,17 +233,14 @@ class FoodRecognitionService
     {
         $translator = new GoogleTranslate($targetLocale);
 
-        // Translate top‑level message if present
         if (isset($data['message']) && is_string($data['message'])) {
             $data['message'] = $this->translateText($data['message'], $translator);
         }
 
-        // Set the language identifier
         if (isset($data['lang']) && is_string($data['lang'])) {
             $data['lang'] = $targetLocale;
         }
 
-        // Translate group names and item names inside 'results'
         if (isset($data['results']) && is_array($data['results'])) {
             foreach ($data['results'] as &$resultGroup) {
                 if (isset($resultGroup['group']) && is_string($resultGroup['group'])) {
@@ -266,9 +262,6 @@ class FoodRecognitionService
         return $data;
     }
 
-    /**
-     * Translate a single text, falling back to original on failure.
-     */
     private function translateText(string $text, GoogleTranslate $translator): string
     {
         if (empty($text)) {

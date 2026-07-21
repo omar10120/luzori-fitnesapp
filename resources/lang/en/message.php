@@ -22,6 +22,7 @@ return [
     'delete_msg' => 'Are you sure you want to delete?',
     'not_found_entry' => ':name not found!',
     'account_banned' => 'Your account is banned. Please contact system administrator.',
+    'account_pending' => 'Your account is pending. Please contact system administrator.',
     'old_password' => 'Old Password',
     'new_password' => 'New Password',
     'change_password' => 'Change Password',
