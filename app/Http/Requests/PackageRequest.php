@@ -6,39 +6,61 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class PackageRequest  extends FormRequest
+class PackageRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize()
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules()
     {
-        $method = strtolower($this->method());
+        $rules = [
+            'name'                     => 'required|string|max:255',
+            'duration_unit'            => 'required|in:monthly,yearly',
+            'duration'                 => 'required|integer|min:1|max:12',
+            'price'                    => 'required|numeric|min:0',
+            'description'              => 'nullable|string',
+            'status'                   => 'required|in:active,inactive',
+            'diet_id'                  => 'required|exists:diets,id',
+            'advice_id'                => 'required|exists:advice,id',
+            'exercise_id'              => 'required|exists:exercises,id',
+            'follow_up_price'          => 'required|numeric|min:0',
+            'food_recognition_limit'   => 'required|integer|min:0',
+            'users'                    => 'nullable|array',
+            'users.*'                  => 'exists:users,id',
+            'package_image'            => 'nullable|image',
+        ];
 
-        $rules = [];
-        switch ($method) {
-            case 'post':
-                $rules = [
-                    // 'title' => 'required',
-                ];
-                break;
-            case 'patch':
-                $rules = [
-                    // 'title' => 'required',
-                ];
-                break;
+        if (strtolower($this->method()) === 'patch') {
+            $rules = array_merge($rules, [
+                'pe_title'             => 'nullable|string|max:255',
+                'pe_instruction'       => 'nullable|string',
+                'pe_tips'              => 'nullable|string',
+                'pe_video_type'        => 'nullable|string|in:url,upload_video',
+                'pe_video_url'         => 'nullable|string',
+                'pe_duration'          => 'nullable|string',
+                'pe_based'             => 'nullable|string|in:reps,time',
+                'pe_type'              => 'nullable|string|in:sets,duration',
+                'pe_equipment_id'      => 'nullable|exists:equipment,id',
+                'pe_level_id'          => 'nullable|exists:levels,id',
+                'pe_status'            => 'nullable|in:active,inactive',
+                'pe_is_premium'        => 'nullable|boolean',
+                'pe_seconds_per_rep'   => 'nullable|integer|min:0',
+                'pe_bodypart_ids'      => 'nullable|array',
+                'pe_bodypart_ids.*'    => 'exists:body_parts,id',
+                'pe_reps'              => 'nullable|array',
+                'pe_reps.*'            => 'nullable|numeric|min:0',
+                'pe_time'              => 'nullable|array',
+                'pe_time.*'            => 'nullable|numeric|min:0',
+                'pe_weight'            => 'nullable|array',
+                'pe_weight.*'          => 'nullable|numeric|min:0',
+                'pe_rest'              => 'nullable|array',
+                'pe_rest.*'            => 'nullable|numeric|min:0',
+                'pe_hours'             => 'nullable',
+                'pe_minute'            => 'nullable',
+                'pe_second'            => 'nullable',
+            ]);
         }
 
         return $rules;
@@ -46,11 +68,9 @@ class PackageRequest  extends FormRequest
 
     public function messages()
     {
-        return [ ];
+        return [];
     }
-    /**
-     * @param Validator $validator
-     */
+
     protected function failedValidation(Validator $validator)
     {
         $data = [

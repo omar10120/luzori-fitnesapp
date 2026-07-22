@@ -12,7 +12,13 @@ class PackageController  extends Controller
     public function getList(Request $request)
     {
         $package = Package::where('status', 'active')
-            ->availableForUser();
+            ->availableForUser()
+            ->with([
+                'diet.categorydiet',
+                'advice.options',
+                'packageExercise.originalExercise',
+                'exercise',
+            ]);
 
         $package->when(request('name'), function ($q) {
             return $q->where('name', 'LIKE', '%' . request('name') . '%');

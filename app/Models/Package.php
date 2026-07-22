@@ -42,6 +42,23 @@ class Package extends Model
         return $this->belongsToMany(User::class, 'assign_package_user');
     }
 
+    public function originalExercise()
+    {
+        return $this->belongsTo(Exercise::class, 'exercise_id');
+    }
+
+    // The package‑specific copy (will exist for every package that has an exercise)
+    public function packageExercise()
+    {
+        return $this->hasOne(PackageExercise::class);
+    }
+
+    // Convenience accessor: returns the customised exercise data if available,
+    // otherwise falls back to the original.
+    public function getEffectiveExerciseAttribute()
+    {
+        return $this->packageExercise ?? $this->originalExercise;
+    }
     /**
      * Packages with no assigned users are public.
      * Packages with assigned users are visible only to those users.

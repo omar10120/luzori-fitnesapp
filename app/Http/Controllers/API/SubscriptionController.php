@@ -25,6 +25,7 @@ class SubscriptionController extends Controller
                     $q->where('user_id', $userId);
                 },
                 'package.advice.options',
+                'package.packageExercise.originalExercise',
                 'package.exercise',
             ]);
 

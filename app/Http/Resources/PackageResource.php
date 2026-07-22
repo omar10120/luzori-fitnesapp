@@ -36,8 +36,14 @@ class PackageResource extends JsonResource
                 fn () => $this->advice ? new AdviceResource($this->advice) : null
             ),
             'exercise'               => $this->when(
-                $this->relationLoaded('exercise'),
-                fn () => $this->exercise ? new ExerciseResource($this->exercise) : null
+                $this->relationLoaded('packageExercise') || $this->relationLoaded('exercise'),
+                function () {
+                    if ($this->packageExercise) {
+                        return new PackageExerciseResource($this->packageExercise);
+                    }
+
+                    return $this->exercise ? new ExerciseResource($this->exercise) : null;
+                }
             ),
             'created_at'             => $this->created_at,
             'updated_at'             => $this->updated_at,

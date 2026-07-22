@@ -662,4 +662,8 @@ return [
     ],
     'food_recognition_limit' => 'Food Recognition Limit',
     'users' => 'Users',
+    'package_exercise' => 'Package Exercise',
+    'package_exercise_replace_note' => 'Changing the exercise replaces the package exercise copy with a fresh clone.',
+    'package_exercise_clone_note' => 'Selected exercise data (including sets) will be cloned into this package on save.',
+    'based' => 'Based',
 ];
