@@ -20,6 +20,18 @@ class Package extends Model
         'advice_id' => 'integer',
         'exercise_id' => 'integer',
     ];
+    public function diet()
+    {
+        return $this->belongsTo(Diet::class); 
+    }
+    public function advice()
+    {
+        return $this->belongsTo(Advice::class); 
+    }
+    public function exercise()
+    {
+        return $this->belongsTo(Exercise::class); 
+    }
 
     public function scopeActive($query)
     {

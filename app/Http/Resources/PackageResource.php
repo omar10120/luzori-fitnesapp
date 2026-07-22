@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class PackageResource  extends JsonResource
+class PackageResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,19 +14,33 @@ class PackageResource  extends JsonResource
      */
     public function toArray($request)
     {
-        
         return [
-            'id'                  => $this->id,
-            'name'                => $this->name,
-            'duration'            => $this->duration,
-            'duration_unit'       => $this->duration_unit,
-            'price'               => $this->price,
-            'description'         => $this->description,
-            'status'              => $this->status,
-            'food_recognition_limit'    => $this->food_recognition_limit,
-            'follow_up_price'    => $this->follow_up_price,
-            'created_at'          => $this->created_at,
-            'updated_at'          => $this->updated_at,
+            'id'                     => $this->id,
+            'name'                   => $this->name,
+            'duration'               => $this->duration,
+            'duration_unit'          => $this->duration_unit,
+            'price'                  => $this->price,
+            'description'            => $this->description,
+            'status'                 => $this->status,
+            'diet_id'                => $this->diet_id,
+            'advice_id'              => $this->advice_id,
+            'exercise_id'            => $this->exercise_id,
+            'food_recognition_limit' => $this->food_recognition_limit,
+            'follow_up_price'        => $this->follow_up_price,
+            'diet'                   => $this->when(
+                $this->relationLoaded('diet'),
+                fn () => $this->diet ? new DietResource($this->diet) : null
+            ),
+            'advice'                 => $this->when(
+                $this->relationLoaded('advice'),
+                fn () => $this->advice ? new AdviceResource($this->advice) : null
+            ),
+            'exercise'               => $this->when(
+                $this->relationLoaded('exercise'),
+                fn () => $this->exercise ? new ExerciseResource($this->exercise) : null
+            ),
+            'created_at'             => $this->created_at,
+            'updated_at'             => $this->updated_at,
         ];
     }
 }

@@ -15,7 +15,18 @@ class SubscriptionController extends Controller
     use SubscriptionTrait;
     public function getList(Request $request)
     {
-        $subscription = Subscription::mySubscription();
+        $userId = auth()->id();
+
+        $subscription = Subscription::mySubscription()
+            ->with([
+                'user',
+                'package.diet.categorydiet',
+                'package.diet.userFavouriteDiet' => function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                },
+                'package.advice.options',
+                'package.exercise',
+            ]);
 
         $subscription->when(request('id'), function ($q) {
             return $q->where('id', 'LIKE', '%' . request('id') . '%');

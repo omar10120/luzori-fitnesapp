@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class SubscriptionResource  extends JsonResource
+class SubscriptionResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,26 +14,38 @@ class SubscriptionResource  extends JsonResource
      */
     public function toArray($request)
     {
-        
         return [
-            'id'                  => $this->id,
-            'user_id'             => $this->user_id,
-            'user_name'           => optional($this->user)->display_name,
-            'package_id'          => $this->package_id,
-            'package_name'        => optional($this->package)->name,
-            'total_amount'        => $this->total_amount,
-            'payment_type'        => $this->payment_type,
-            'txn_id'              => $this->txn_id,
-            'transaction_detail'  => $this->transaction_detail,
-            'payment_status'      => $this->payment_status,
-            'status'            => $this->status,
-            'is_follow_up'      => $this->is_follow_up,
-            'package_data'      => $this->package_data,
-            'food_recognition_limit'    => $this->food_recognition_limit,
+            'id'                       => $this->id,
+            'user_id'                  => $this->user_id,
+            'user_name'                => optional($this->user)->display_name,
+            'package_id'               => $this->package_id,
+            'package_name'             => optional($this->package)->name,
+            'total_amount'             => $this->total_amount,
+            'payment_type'             => $this->payment_type,
+            'txn_id'                   => $this->txn_id,
+            'transaction_detail'       => $this->transaction_detail,
+            'payment_status'           => $this->payment_status,
+            'status'                   => $this->status,
+            'is_follow_up'             => $this->is_follow_up,
+            'package_data'             => $this->resolvePackageData($request),
+            'food_recognition_limit'   => $this->food_recognition_limit,
             'subscription_start_date'  => $this->subscription_start_date,
             'subscription_end_date'    => $this->subscription_end_date,
-            'created_at'          => $this->created_at,
-            'updated_at'          => $this->updated_at,
+            'created_at'               => $this->created_at,
+            'updated_at'               => $this->updated_at,
         ];
+    }
+
+    protected function resolvePackageData($request): ?array
+    {
+        $snapshot = $this->package_data ?? [];
+
+        if (!$this->relationLoaded('package') || !$this->package) {
+            return $snapshot ?: null;
+        }
+
+        $packagePayload = (new PackageResource($this->package))->resolve($request);
+
+        return array_merge($snapshot, $packagePayload);
     }
 }
