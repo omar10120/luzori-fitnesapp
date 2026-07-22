@@ -174,6 +174,7 @@ Route::group(['middleware' => [ 'auth', 'useractive' ]], function () {
     Route::resource('productcategory',ProductCategoryController::class);
 
     Route::resource('package',PackageController::class);
+    Route::get('package-exercise-data/{id}', [PackageController::class, 'getExerciseData'])->name('package.exercise.data');
 
     Route::post('remove-file',[ HomeController::class, 'removeFile' ])->name('remove.file');
 

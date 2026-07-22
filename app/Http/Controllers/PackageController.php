@@ -64,10 +64,40 @@ class PackageController extends Controller
             $package->users()->attach($request->users ?? []);
 
             $exercise = Exercise::findOrFail($request->exercise_id);
-            $this->cloneExerciseToPackage($package, $exercise);
+            $packageExercise = $this->cloneExerciseToPackage($package, $exercise);
+            $this->updatePackageExerciseFromRequest($packageExercise, $request);
         });
 
         return redirect()->route('package.index')->withSuccess(__('message.save_form', ['form' => __('message.package')]));
+    }
+
+    public function getExerciseData($id)
+    {
+        $exercise = Exercise::findOrFail($id);
+
+        $durationParts = $exercise->duration ? explode(':', $exercise->duration) : [null, null, null];
+
+        return response()->json([
+            'id'              => $exercise->id,
+            'title'           => $exercise->title,
+            'instruction'     => $exercise->instruction,
+            'tips'            => $exercise->tips,
+            'video_type'      => $exercise->video_type,
+            'video_url'       => $exercise->video_url,
+            'bodypart_ids'    => $exercise->bodypart_ids,
+            'duration'        => $exercise->duration,
+            'hours'           => $durationParts[0] ?? null,
+            'minute'          => $durationParts[1] ?? null,
+            'second'          => $durationParts[2] ?? null,
+            'based'           => $exercise->based ?? 'reps',
+            'type'            => $exercise->type ?? 'sets',
+            'equipment_id'    => $exercise->equipment_id,
+            'level_id'        => $exercise->level_id,
+            'sets'            => $exercise->sets ?? [],
+            'status'          => $exercise->status ?? 'active',
+            'is_premium'      => (int) $exercise->is_premium,
+            'seconds_per_rep' => $exercise->seconds_per_rep,
+        ]);
     }
 
     public function show($id)
@@ -124,7 +154,8 @@ class PackageController extends Controller
 
             if ($exerciseChanged || $missingClone) {
                 $exercise = Exercise::findOrFail($request->exercise_id);
-                $this->cloneExerciseToPackage($package, $exercise);
+                $packageExercise = $this->cloneExerciseToPackage($package, $exercise);
+                $this->updatePackageExerciseFromRequest($packageExercise, $request);
             } else {
                 $this->updatePackageExerciseFromRequest($package->packageExercise, $request);
             }

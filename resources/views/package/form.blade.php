@@ -100,6 +100,105 @@
                     $('#pe_minute').val(null).trigger('change');
                     $('#pe_second').val(null).trigger('change');
                 });
+
+                var exerciseDataUrl = @json(url('admin/package-exercise-data'));
+
+                function setTinyContent(selector, content) {
+                    var el = document.querySelector(selector);
+                    if (!el) {
+                        return;
+                    }
+                    if (typeof tinymce !== 'undefined' && tinymce.get(el.id)) {
+                        tinymce.get(el.id).setContent(content || '');
+                    } else {
+                        $(selector).val(content || '');
+                    }
+                }
+
+                function setSelectValue($el, value) {
+                    if (!$el.length) {
+                        return;
+                    }
+                    if (value === null || value === undefined || value === '') {
+                        $el.val(null).trigger('change');
+                        return;
+                    }
+                    if ($el.find('option[value="' + value + '"]').length === 0) {
+                        $el.append(new Option(value, value, true, true));
+                    }
+                    $el.val(String(value)).trigger('change');
+                }
+
+                function renderPeSets(sets) {
+                    var $tbody = $('#pe_table_list tbody');
+                    $tbody.empty();
+
+                    if (!sets || !sets.length) {
+                        sets = [{ reps: '', time: '', weight: '', rest: '' }];
+                    }
+
+                    sets.forEach(function (field, key) {
+                        var rowHtml =
+                            '<tr id="pe_row_' + key + '" row="' + key + '" data-id="' + key + '">' +
+                                '<td><div class="form-group"><input type="number" name="pe_reps[]" value="' + (field.reps ?? '') + '" placeholder="{{ __('message.reps') }}" class="form-control" min="0"></div></td>' +
+                                '<td><div class="form-group"><input type="number" name="pe_time[]" value="' + (field.time ?? '') + '" placeholder="{{ __('message.time') }}" class="form-control" min="0"></div></td>' +
+                                '<td class="weight"><div class="form-group"><input type="number" name="pe_weight[]" value="' + (field.weight ?? '') + '" placeholder="{{ __('message.weight') }}" class="form-control" min="0"></div></td>' +
+                                '<td><div class="form-group"><input type="number" name="pe_rest[]" value="' + (field.rest ?? '') + '" placeholder="{{ __('message.rest') }}" class="form-control" min="0"></div></td>' +
+                                '<td><a href="javascript:void(0)" id="pe_remove_' + key + '" class="pe-removebtn btn btn-sm btn-icon btn-danger" row="' + key + '"><span class="btn-inner">X</span></a></td>' +
+                            '</tr>';
+                        $tbody.append(rowHtml);
+                    });
+                }
+
+                function activatePeTab(type) {
+                    changePeTabValue(type || 'sets');
+                    if (type === 'duration') {
+                        $('#pe-tab-duration').tab('show');
+                    } else {
+                        $('#pe-tab-sets').tab('show');
+                    }
+                }
+
+                function fillPackageExercise(data) {
+                    $('#package-exercise-section').removeClass('d-none');
+                    $('#pe_title').val(data.title || '');
+                    setSelectValue($('#pe_video_type'), data.video_type || 'url');
+                    $('#pe_video_url').val(data.video_url || '');
+                    setSelectValue($('#pe_status'), data.status || 'active');
+                    $('#pe_is_premium').prop('checked', parseInt(data.is_premium, 10) === 1);
+                    $('#pe_seconds_per_rep').val(data.seconds_per_rep || '');
+
+                    if (data.based === 'time') {
+                        $('#pe-based-time').prop('checked', true).trigger('change');
+                    } else {
+                        $('#pe-based-reps').prop('checked', true).trigger('change');
+                    }
+
+                    activatePeTab(data.type || 'sets');
+                    renderPeSets(data.sets || []);
+                    setSelectValue($('#pe_hours'), data.hours);
+                    setSelectValue($('#pe_minute'), data.minute);
+                    setSelectValue($('#pe_second'), data.second);
+                    setTinyContent('#pe_instruction', data.instruction || '');
+                    setTinyContent('#pe_tips', data.tips || '');
+                    togglePeVideoFields(data.video_type || 'url');
+                }
+
+                $('#exercise_id').on('change', function () {
+                    var exerciseId = $(this).val();
+                    if (!exerciseId) {
+                        $('#package-exercise-section').addClass('d-none');
+                        return;
+                    }
+
+                    $.get(exerciseDataUrl + '/' + exerciseId)
+                        .done(function (data) {
+                            fillPackageExercise(data);
+                        })
+                        .fail(function () {
+                            alert('Failed to load exercise data.');
+                        });
+                });
             });
         })(jQuery);
     </script>
@@ -109,11 +208,27 @@
     <div>
         <?php
             $id = $id ?? null;
-            $packageExercise = $packageExercise ?? ($data->packageExercise ?? null);
+            $packageExercise = $packageExercise ?? (isset($data) ? ($data->packageExercise ?? null) : null);
+            if (!$packageExercise) {
+                $packageExercise = new \App\Models\PackageExercise([
+                    'title' => old('pe_title'),
+                    'instruction' => old('pe_instruction'),
+                    'tips' => old('pe_tips'),
+                    'video_type' => old('pe_video_type', 'url'),
+                    'video_url' => old('pe_video_url'),
+                    'status' => old('pe_status', 'active'),
+                    'is_premium' => old('pe_is_premium', 0),
+                    'type' => old('pe_type', 'sets'),
+                    'based' => old('pe_based', 'reps'),
+                    'seconds_per_rep' => old('pe_seconds_per_rep'),
+                    'duration' => old('pe_duration'),
+                    'sets' => [],
+                ]);
+            }
             $selectedUsers = old('users', isset($data) ? $data->users()->pluck('users.id')->toArray() : []);
-            $peDuration = isset($packageExercise) && $packageExercise->duration != null ? explode(':', $packageExercise->duration) : null;
-            $peType = old('pe_type', isset($packageExercise) && $packageExercise->type != null ? $packageExercise->type : 'sets');
-            $peBased = old('pe_based', isset($packageExercise) && $packageExercise->based != null ? $packageExercise->based : 'reps');
+            $peDuration = $packageExercise->duration != null ? explode(':', $packageExercise->duration) : null;
+            $peType = old('pe_type', $packageExercise->type != null ? $packageExercise->type : 'sets');
+            $peBased = old('pe_based', $packageExercise->based != null ? $packageExercise->based : 'reps');
             $peSets = old('pe_reps')
                 ? collect(old('pe_reps'))->map(function ($reps, $i) {
                     return [
@@ -123,16 +238,15 @@
                         'rest' => old('pe_rest.' . $i),
                     ];
                 })->all()
-                : (isset($packageExercise) ? ($packageExercise->sets ?? []) : []);
+                : ($packageExercise->sets ?? []);
+            $showPeSection = isset($id) || old('exercise_id') || old('pe_title');
         ?>
         @if(isset($id))
             {{ html()->modelForm($data, 'PATCH', route('package.update', $id) )->attribute('enctype', 'multipart/form-data')->open() }}
-            @if($packageExercise)
-                {{ html()->hidden('pe_type', $peType) }}
-            @endif
         @else
             {{ html()->form('POST', route('package.store'))->attribute('enctype', 'multipart/form-data')->open() }} 
         @endif
+        {{ html()->hidden('pe_type', $peType) }}
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
@@ -171,7 +285,7 @@
                             </div>
                             <div class="form-group col-md-4">
                                 {{ html()->label(__('message.exercise'))->class('form-control-label') }}
-                                {{ html()->select('exercise_id', $exercises, old('exercise_id'))->class('form-control select2js')->attribute('required', 'required') }}
+                                {{ html()->select('exercise_id', $exercises, old('exercise_id'))->id('exercise_id')->class('form-control select2js')->attribute('required', 'required') }}
                                 @if(isset($id))
                                     <small class="text-muted">{{ __('message.package_exercise_replace_note') }}</small>
                                 @else
@@ -205,25 +319,25 @@
                             </div>
                         </div>
 
-                        @if(isset($id) && $packageExercise)
+                        <div id="package-exercise-section" class="{{ $showPeSection ? '' : 'd-none' }}">
                             <hr>
                             <h5 class="mb-3">{{ __('message.package_exercise') }}</h5>
                             <div class="row">
                                 <div class="form-group col-md-4">
                                     {{ html()->label(__('message.title'), 'pe_title')->class('form-control-label') }}
-                                    {{ html()->text('pe_title', old('pe_title', $packageExercise->title))->class('form-control')->placeholder(__('message.title')) }}
+                                    {{ html()->text('pe_title', old('pe_title', $packageExercise->title))->id('pe_title')->class('form-control')->placeholder(__('message.title')) }}
                                 </div>
                                 <div class="form-group col-md-4">
                                     {{ html()->label(__('message.video_type'), 'pe_video_type')->class('form-control-label') }}
-                                    {{ html()->select('pe_video_type', ['url' => __('message.url'), 'upload_video' => __('message.upload_video')], old('pe_video_type', $packageExercise->video_type))->class('form-control select2js') }}
+                                    {{ html()->select('pe_video_type', ['url' => __('message.url'), 'upload_video' => __('message.upload_video')], old('pe_video_type', $packageExercise->video_type))->id('pe_video_type')->class('form-control select2js') }}
                                 </div>
                                 <div class="form-group col-md-4 pe-video-url">
                                     {{ html()->label(__('message.video_url'), 'pe_video_url')->class('form-control-label') }}
-                                    {{ html()->text('pe_video_url', old('pe_video_url', $packageExercise->video_url))->class('form-control')->placeholder(__('message.video_url')) }}
+                                    {{ html()->text('pe_video_url', old('pe_video_url', $packageExercise->video_url))->id('pe_video_url')->class('form-control')->placeholder(__('message.video_url')) }}
                                 </div>
                                 <div class="form-group col-md-4">
                                     {{ html()->label(__('message.status'), 'pe_status')->class('form-control-label') }}
-                                    {{ html()->select('pe_status', ['active' => __('message.active'), 'inactive' => __('message.inactive')], old('pe_status', $packageExercise->status))->class('form-control select2js') }}
+                                    {{ html()->select('pe_status', ['active' => __('message.active'), 'inactive' => __('message.inactive')], old('pe_status', $packageExercise->status))->id('pe_status')->class('form-control select2js') }}
                                 </div>
                                 <div class="form-group col-md-4">
                                     {{ html()->label(__('message.is_premium'), 'pe_is_premium')->class('form-control-label') }}
@@ -239,10 +353,10 @@
 
                             <ul class="d-flex nav nav-pills nav-fill mb-3 text-center exercise-tab" id="pe-exercise-pills-tab" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link {{ $peType == 'sets' ? 'active show' : '' }}" data-bs-toggle="tab" href="#pe-exercise-sets" data-type="sets" role="tab" aria-selected="{{ $peType == 'sets' ? 'true' : 'false' }}">{{ __('message.sets') }}</a>
+                                    <a class="nav-link {{ $peType == 'sets' ? 'active show' : '' }}" id="pe-tab-sets" data-bs-toggle="tab" href="#pe-exercise-sets" data-type="sets" role="tab" aria-selected="{{ $peType == 'sets' ? 'true' : 'false' }}">{{ __('message.sets') }}</a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link {{ $peType == 'duration' ? 'active show' : '' }}" data-bs-toggle="tab" href="#pe-exercise-duration" data-type="duration" role="tab" aria-selected="{{ $peType == 'duration' ? 'true' : 'false' }}" tabindex="-1">{{ __('message.duration') }}</a>
+                                    <a class="nav-link {{ $peType == 'duration' ? 'active show' : '' }}" id="pe-tab-duration" data-bs-toggle="tab" href="#pe-exercise-duration" data-type="duration" role="tab" aria-selected="{{ $peType == 'duration' ? 'true' : 'false' }}" tabindex="-1">{{ __('message.duration') }}</a>
                                 </li>
                             </ul>
 
@@ -267,7 +381,7 @@
                                         <div class="col-md-4">
                                             <div class="form-group pe-reps-time-row">
                                                 <div class="input-group input-group-sm">
-                                                    {{ html()->number('pe_seconds_per_rep', old('pe_seconds_per_rep', $packageExercise->seconds_per_rep))->placeholder(__('message.seconds_per_rep'))->class('form-control')->attribute('min', 0) }}
+                                                    {{ html()->number('pe_seconds_per_rep', old('pe_seconds_per_rep', $packageExercise->seconds_per_rep))->id('pe_seconds_per_rep')->placeholder(__('message.seconds_per_rep'))->class('form-control')->attribute('min', 0) }}
                                                     <span class="input-group-text text-danger" data-bs-toggle="tooltip" title="{{ __('message.seconds_per_rep_help') }}">
                                                         <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path fill-rule="evenodd" clip-rule="evenodd" d="M16.334 2.75H7.665C4.644 2.75 2.75 4.889 2.75 7.916V16.084C2.75 19.111 4.635 21.25 7.665 21.25H16.333C19.364 21.25 21.25 19.111 21.25 16.084V7.916C21.25 4.889 19.364 2.75 16.334 2.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -410,13 +524,13 @@
                             <hr>
                             <div class="form-group col-md-12">
                                 {{ html()->label(__('message.instruction'), 'pe_instruction')->class('form-control-label') }}
-                                {{ html()->textarea('pe_instruction', old('pe_instruction', $packageExercise->instruction))->class('form-control tinymce-pe-instruction') }}
+                                {{ html()->textarea('pe_instruction', old('pe_instruction', $packageExercise->instruction))->id('pe_instruction')->class('form-control tinymce-pe-instruction') }}
                             </div>
                             <div class="form-group col-md-12">
                                 {{ html()->label(__('message.tips'), 'pe_tips')->class('form-control-label') }}
-                                {{ html()->textarea('pe_tips', old('pe_tips', $packageExercise->tips))->class('form-control tinymce-pe-tips') }}
+                                {{ html()->textarea('pe_tips', old('pe_tips', $packageExercise->tips))->id('pe_tips')->class('form-control tinymce-pe-tips') }}
                             </div>
-                        @endif
+                        </div>
 
                         <hr>
                         {{ html()->submit( __('message.save') )->class('btn btn-md btn-primary float-end') }}
