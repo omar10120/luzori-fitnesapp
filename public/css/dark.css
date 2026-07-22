@@ -473,7 +473,7 @@
   color: #8A92A6;
 }
 .dark .sidebar .navbar-nav .nav-item .nav-link:not(.disabled).active, .dark .sidebar .navbar-nav .nav-item .nav-link:not(.disabled)[aria-expanded=true] {
-  background-color: #f16a1b;
+  background-color: #D4AF37;
   color: #fff;
   box-shadow: 0 10px 20px -10px rgba(132, 54, 8, 0.4);
 }
