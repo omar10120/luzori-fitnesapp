@@ -74,7 +74,7 @@
         <li class="nav-item dropdown">
           <a href="#" class="search-toggle nav-link" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             @php
-                $selected_lang_flag = file_exists(public_path('/images/flag/' .app()->getLocale() . '.png')) ? asset('/images/flag/' . app()->getLocale() . '.png') : asset('/images/lang_flag.png');
+                $selected_lang_flag = file_exists(public_path('/images/flag/' .app()->getLocale() . '.svg')) ? asset('/images/flag/' . app()->getLocale() . '.svg') : asset('/images/lang_flag.svg');
             @endphp
             <img src="{{ $selected_lang_flag }}" class="img-fluid rounded selected-lang" alt="lang-flag">
             <span class="bg-primary"></span>
@@ -94,7 +94,7 @@
                             <li class="iq-sub-card list-group-item">
                                 <a class="dropdown-item p-0" data-lang="{{ $lang['id'] }}" href="{{ route('change.language',[ 'locale' => $lang['id'] ]) }}">
                                 @php
-                                    $flag_path = file_exists(public_path('/images/flag/' . $lang['id'] . '.png')) ? asset('/images/flag/' . $lang['id'] . '.png') : asset('/images/lang_flag.png');
+                                    $flag_path = file_exists(public_path('/images/flag/' . $lang['id'] . '.svg')) ? asset('/images/flag/' . $lang['id'] . '.svg') : asset('/images/lang_flag.svg');
                                 @endphp
                                     <img src="{{ $flag_path }}" alt="img-flag-{{ $lang['id'] }}" class="img-fluid me-2 selected-lang-list" />
                                     {{ $lang['title'] }}
