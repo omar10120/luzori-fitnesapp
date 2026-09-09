@@ -94,6 +94,119 @@
           font-size: 0.85rem;
       }
 
+      .notification-dropdown {
+          margin-right: 0.5rem;
+      }
+
+      .notification-link {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          color: rgba(255,255,255,0.9);
+      }
+
+      .notification-link:hover {
+          color: #fff;
+          background: rgba(255,255,255,0.04);
+      }
+
+      .notification-badge {
+          position: absolute;
+          top: 5px;
+          right: 5px;
+          min-width: 18px;
+          height: 18px;
+          padding: 0 0.3rem;
+          border-radius: 999px;
+          background: #f16a1b;
+          color: #fff;
+          font-size: 0.65rem;
+          font-weight: 700;
+          line-height: 18px;
+          text-align: center;
+      }
+
+      .notification-menu {
+          width: min(360px, 90vw);
+          border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(14, 18, 27, 0.98);
+          box-shadow: 0 22px 40px rgba(0, 0, 0, 0.32);
+          overflow: hidden;
+          padding: 0;
+      }
+
+      .notification-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.75rem 0.9rem;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          color: #fff;
+          font-weight: 600;
+      }
+
+      .notification-list {
+          max-height: 320px;
+          overflow-y: auto;
+      }
+
+      .notification-item {
+          display: block;
+          padding: 0.8rem 0.9rem;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          color: rgba(255,255,255,0.88);
+          text-decoration: none;
+      }
+
+      .notification-item:last-child {
+          border-bottom: none;
+      }
+
+      .notification-item:hover {
+          background: rgba(255,255,255,0.04);
+          color: #fff;
+      }
+
+      .notification-item.unread {
+          background: rgba(241, 106, 27, 0.08);
+      }
+
+      .notification-topline {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.5rem;
+          margin-bottom: 0.2rem;
+      }
+
+      .notification-title {
+          font-size: 0.82rem;
+          font-weight: 600;
+      }
+
+      .notification-time {
+          font-size: 0.68rem;
+          color: rgba(255,255,255,0.65);
+      }
+
+      .notification-message {
+          font-size: 0.75rem;
+          color: rgba(255,255,255,0.72);
+          line-height: 1.4;
+      }
+
+      .notification-empty {
+          padding: 1rem 0.9rem;
+          color: rgba(255,255,255,0.7);
+          font-size: 0.8rem;
+          text-align: center;
+      }
+
       @media (max-width: 991.98px) {
           .client-search {
               width: 100%;
@@ -244,6 +357,11 @@
       </span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      @php
+          $authUser = auth()->user();
+          $headerNotifications = $authUser ? $authUser->notifications()->latest()->limit(5)->get() : collect();
+          $headerUnreadNotifications = $authUser ? $authUser->unreadNotifications()->count() : 0;
+      @endphp
       <ul class="navbar-nav ms-auto  navbar-list mb-2 mb-lg-0 mt-3">
         <li class="nav-item client-search">
           <div class="position-relative">
@@ -261,6 +379,45 @@
           <a href="{{ url('/admin/exercise/create') }}" class="btn btn-primary btn-sm rounded-pill px-3 mt-1">
             Create New Exercise
           </a>
+        </li>
+        <li class="nav-item dropdown notification-dropdown">
+          <a class="nav-link notification-link" href="#" id="navbarNotificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        
+               <img src="{{ asset('vendor/Iconly/Bold/Notification.svg') }}" 
+                alt="{{ __('message.notifications') }}" 
+                width="24" 
+                height="24">
+
+              @if($headerUnreadNotifications > 0)
+                <span class="notification-badge">{{ $headerUnreadNotifications }}</span>
+              @endif
+          </a>
+          <div class="dropdown-menu dropdown-menu-end notification-menu" aria-labelledby="navbarNotificationDropdown">
+            <div class="notification-header">
+              <span>Notifications</span>
+              @if($headerUnreadNotifications > 0)
+                <span class="badge bg-primary rounded-pill">{{ $headerUnreadNotifications }}</span>
+              @endif
+            </div>
+            <div class="notification-list">
+              @forelse($headerNotifications as $notification)
+                @php
+                    $notificationData = $notification->data ?? [];
+                    $notificationTitle = $notificationData['subject'] ?? $notificationData['title'] ?? __('message.notification');
+                    $notificationMessage = $notificationData['message'] ?? __('message.notification');
+                @endphp
+                <a href="javascript:void(0)" class="notification-item {{ $notification->read_at ? '' : 'unread' }}">
+                  <div class="notification-topline">
+                    <span class="notification-title">{{ Str::limit($notificationTitle, 40) }}</span>
+                    <span class="notification-time">{{ timeAgoFormate($notification->created_at) }}</span>
+                  </div>
+                  <div class="notification-message">{{ Str::limit(strip_tags($notificationMessage), 90) }}</div>
+                </a>
+              @empty
+                <div class="notification-empty">No notifications</div>
+              @endforelse
+            </div>
+          </div>
         </li>
         <li class="nav-item theme-scheme-dropdown dropdown iq-dropdown">
             <div class="btn sit_color_theam sit_darkcolor_theam" data-bs-toggle="tooltip" title="{{ __('message.sit_dark_color_theam') }}" data-setting="color-mode" data-name="color" data-value="dark">
