@@ -244,7 +244,7 @@
       </span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto  navbar-list mb-2 mb-lg-0">
+      <ul class="navbar-nav ms-auto  navbar-list mb-2 mb-lg-0 mt-3">
         <li class="nav-item client-search">
           <div class="position-relative">
               <input
@@ -256,6 +256,11 @@
               >
               <div id="client-search-results" class="client-search-results"></div>
           </div>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url('/admin/exercise/create') }}" class="btn btn-primary btn-sm rounded-pill px-3 mt-1">
+            Create New Exercise
+          </a>
         </li>
         <li class="nav-item theme-scheme-dropdown dropdown iq-dropdown">
             <div class="btn sit_color_theam sit_darkcolor_theam" data-bs-toggle="tooltip" title="{{ __('message.sit_dark_color_theam') }}" data-setting="color-mode" data-name="color" data-value="dark">
