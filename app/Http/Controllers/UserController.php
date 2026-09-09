@@ -94,6 +94,53 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+    public function searchClient(Request $request)
+    {
+        $authUser = auth()->user();
+
+        if (!$authUser || !$authUser->can('user-show')) {
+            return response()->json(['status' => false, 'results' => []], 403);
+        }
+
+        $query = trim((string) $request->get('q', ''));
+
+        if ($query === '') {
+            return response()->json(['status' => true, 'results' => []]);
+        }
+
+        $users = User::where('user_type', 'user')
+            ->where(function ($q) use ($query) {
+                $search = strtolower($query);
+
+                $q->where('id', $query)
+                    ->orWhere('email', 'like', "%{$query}%")
+                    ->orWhere('username', 'like', "%{$query}%")
+                    ->orWhere('display_name', 'like', "%{$query}%")
+                    ->orWhere('first_name', 'like', "%{$query}%")
+                    ->orWhere('last_name', 'like', "%{$query}%")
+                    ->orWhereRaw('LOWER(CONCAT(first_name, " ", last_name)) LIKE ?', ["%{$search}%"]);
+            })
+            ->orderBy('id', 'desc')
+            ->limit(8)
+            ->get(['id', 'first_name', 'last_name', 'display_name', 'email', 'username']);
+
+        $results = $users->map(function ($user) {
+            $name = trim($user->display_name ?: ($user->first_name . ' ' . $user->last_name) ?: $user->username);
+
+            return [
+                'id' => $user->id,
+                'name' => $name,
+                'email' => $user->email ?: '—',
+                'profile_url' => route('users.show', ['id' => $user->id]),
+            ];
+        })->values();
+
+        return response()->json([
+            'status' => true,
+            'results' => $results,
+        ]);
+    }
+
     public function show(SubscriptionDataTable $dataTable, $id, $tab = 'detail')
     {
         $user = auth()->user();

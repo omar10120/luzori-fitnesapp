@@ -1,4 +1,112 @@
 @push('scripts')
+  <style>
+      .client-search {
+          min-width: 280px;
+          margin-right: 0.75rem;
+      }
+
+      .client-search .client-search-input {
+          min-width: 280px;
+          height: 38px;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.04);
+          color: #fff;
+          padding: 0.55rem 0.85rem;
+      }
+
+      .client-search .client-search-input::placeholder {
+          color: rgba(255,255,255,0.6);
+      }
+
+      .client-search-results {
+          position: absolute;
+          right: 0;
+          top: calc(100% + 8px);
+          width: min(360px, 90vw);
+          background: rgba(14, 18, 27, 0.98);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 12px;
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+          z-index: 1200;
+          display: none;
+          overflow: hidden;
+      }
+
+      .client-search-results.show {
+          display: block;
+      }
+
+      .client-search-result-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.7rem 0.85rem;
+          color: #f5f7fb;
+          text-decoration: none;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+
+      .client-search-result-item:last-child {
+          border-bottom: none;
+      }
+
+      .client-search-result-item:hover {
+          background: rgba(255,255,255,0.04);
+          color: #fff;
+      }
+
+      .client-search-avatar {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #f16a1b, #ff9a5a);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          color: #fff;
+          flex-shrink: 0;
+      }
+
+      .client-search-meta {
+          min-width: 0;
+      }
+
+      .client-search-name {
+          font-size: 0.9rem;
+          font-weight: 600;
+          line-height: 1.2;
+      }
+
+      .client-search-email {
+          font-size: 0.75rem;
+          color: rgba(255,255,255,0.7);
+          line-height: 1.2;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+      }
+
+      .client-search-empty {
+          padding: 0.85rem 0.9rem;
+          color: rgba(255,255,255,0.7);
+          font-size: 0.85rem;
+      }
+
+      @media (max-width: 991.98px) {
+          .client-search {
+              width: 100%;
+              min-width: 0;
+              margin: 0.5rem 0 0;
+          }
+
+          .client-search .client-search-input {
+              width: 100%;
+              min-width: 0;
+          }
+      }
+  </style>
   <script>
       $(document).ready(function() {
           const savedTheme = localStorage.getItem('theme');
@@ -25,6 +133,84 @@
                   $('.sit_darkcolor_theam').show();
                   $('.sit_lightcolor_theam').hide();
                   localStorage.setItem('theme', 'light');
+              }
+          });
+
+          const $clientSearchInput = $('#client-search-input');
+          const $clientSearchResults = $('#client-search-results');
+          let clientSearchTimer = null;
+
+          function renderClientResults(results) {
+              if (!results.length) {
+                  $clientSearchResults.html('<div class="client-search-empty">No client found</div>').addClass('show');
+                  return;
+              }
+
+              const html = results.map(function(item) {
+                  const initials = (item.name || 'U').charAt(0).toUpperCase();
+
+                  return `
+                      <a href="${item.profile_url}" class="client-search-result-item">
+                          <div class="client-search-avatar">${initials}</div>
+                          <div class="client-search-meta">
+                              <div class="client-search-name">${item.name}</div>
+                              <div class="client-search-email">${item.email}</div>
+                          </div>
+                      </a>
+                  `;
+              }).join('');
+
+              $clientSearchResults.html(html).addClass('show');
+          }
+
+          function searchClients() {
+              const query = $.trim($clientSearchInput.val());
+
+              if (!query) {
+                  $clientSearchResults.removeClass('show').empty();
+                  return;
+              }
+
+              if (clientSearchTimer) {
+                  clearTimeout(clientSearchTimer);
+              }
+
+              clientSearchTimer = setTimeout(function() {
+                  $.ajax({
+                      url: "{{ route('user.search') }}",
+                      type: 'GET',
+                      data: { q: query },
+                      dataType: 'json',
+                      success: function(response) {
+                          if (response && response.status) {
+                              renderClientResults(response.results || []);
+                          }
+                      }
+                  });
+              }, 200);
+          }
+
+          $clientSearchInput.on('input', searchClients);
+
+          $clientSearchInput.on('keydown', function(event) {
+              if (event.key !== 'Enter') {
+                  return;
+              }
+
+              event.preventDefault();
+
+              const firstResult = $clientSearchResults.find('.client-search-result-item').first();
+              if (firstResult.length) {
+                  window.location.href = firstResult.attr('href');
+                  return;
+              }
+
+              $clientSearchResults.removeClass('show').empty();
+          });
+
+          $(document).on('click', function(event) {
+              if (!$(event.target).closest('.client-search').length) {
+                  $clientSearchResults.removeClass('show');
               }
           });
       });
@@ -59,6 +245,18 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto  navbar-list mb-2 mb-lg-0">
+        <li class="nav-item client-search">
+          <div class="position-relative">
+              <input
+                  id="client-search-input"
+                  type="text"
+                  class="form-control client-search-input"
+                  placeholder="Search client"
+                  autocomplete="off"
+              >
+              <div id="client-search-results" class="client-search-results"></div>
+          </div>
+        </li>
         <li class="nav-item theme-scheme-dropdown dropdown iq-dropdown">
             <div class="btn sit_color_theam sit_darkcolor_theam" data-bs-toggle="tooltip" title="{{ __('message.sit_dark_color_theam') }}" data-setting="color-mode" data-name="color" data-value="dark">
               <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
