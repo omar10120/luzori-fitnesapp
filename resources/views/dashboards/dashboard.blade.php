@@ -175,6 +175,84 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 </script>
 @endif
 @endpush
+@push('styles')
+<style>
+    .dashboard-stat-card {
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+        box-shadow: 0 20px 45px rgba(13, 17, 30, 0.18);
+        overflow: hidden;
+    }
+
+    .dashboard-stat-card .card-body {
+        padding: 1rem;
+    }
+
+    .dashboard-stat-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 150px;
+        text-align: center;
+    }
+
+    .dashboard-ring {
+        --percent: 100;
+        --ring-color: #f16a1b;
+        position: relative;
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: conic-gradient(var(--ring-color) calc(var(--percent) * 1%), rgba(255,255,255,0.08) 0);
+        display: grid;
+        place-items: center;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    .dashboard-ring::before {
+        content: "";
+        position: absolute;
+        inset: 11px;
+        border-radius: inherit;
+        background: rgba(18, 22, 32, 0.92);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .dashboard-ring-value {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    .dashboard-ring-value strong {
+        color: #ffffff;
+        font-size: 1.4rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .dashboard-ring-label {
+        margin-top: 0.85rem;
+        color: rgba(255,255,255,0.86);
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: capitalize;
+    }
+
+    @media (max-width: 991.98px) {
+        .dashboard-stat-content {
+            min-height: 138px;
+        }
+    }
+</style>
+@endpush
 <x-app-layout :assets="$assets ?? []">
    	<div class="row">
       	<div class="col-md-12 col-lg-12 pt-1">
@@ -192,9 +270,13 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 									</svg>
 								</div>
 
-								<div class="text-right dashboard-show-data">
-									<p class="mb-0">{{ __('message.user') }}</p>
-									<h5 class="counter">{{ $data['dashboard']['total_user'] }}</h5>
+								<div class="dashboard-stat-content">
+									<div class="dashboard-ring" style="--percent: 100; --ring-color: #f16a1b;">
+										<div class="dashboard-ring-value">
+											<strong>{{ $data['dashboard']['total_user'] }}</strong>
+										</div>
+									</div>
+									<div class="dashboard-ring-label">{{ __('message.user') }}</div>
 								</div>
 							</div>
 						</div>
@@ -213,9 +295,13 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 										<path d="M2.49609 18.0181L5.6001 21.1221" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 									</svg>
 								</div>
-								<div class="text-right dashboard-show-data">
-									<p class="mb-0">{{ __('message.equipment') }}</p>
-									<h5 class="counter" >{{ $data['dashboard']['total_equipment'] }}</h5>
+								<div class="dashboard-stat-content">
+									<div class="dashboard-ring" style="--percent: 100; --ring-color: #4bc7d2;">
+										<div class="dashboard-ring-value">
+											<strong>{{ $data['dashboard']['total_equipment'] }}</strong>
+										</div>
+									</div>
+									<div class="dashboard-ring-label">{{ __('message.equipment') }}</div>
 								</div>
 							</div>
 						</div>
@@ -233,9 +319,13 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 										<path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z" stroke="white" stroke-width="1.5"/>
 									</svg>
 								</div>								
-								<div class="text-right dashboard-show-data">
-									<p class="mb-0">{{ __('message.level') }}</p>
-									<h5 class="counter" >{{ $data['dashboard']['total_level'] }}</h5>
+								<div class="dashboard-stat-content">
+									<div class="dashboard-ring" style="--percent: 100; --ring-color: #1aa053;">
+										<div class="dashboard-ring-value">
+											<strong>{{ $data['dashboard']['total_level'] }}</strong>
+										</div>
+									</div>
+									<div class="dashboard-ring-label">{{ __('message.level') }}</div>
 								</div>
 							</div>
 						</div>
@@ -251,9 +341,13 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 										<path d="M2 10.5588C5.1153 10.2051 6.39428 10.6706 8.75105 12.2516M15.5021 13.7518L13.8893 6.66258C13.8186 6.35178 13.4791 6.18556 13.1902 6.32034L10.3819 7.6308C10.1384 7.74442 9.85788 7.75857 9.61117 7.65213C8.87435 7.33425 8.38405 6.97152 7.86685 6.31394C7.61986 5.99992 7.54201 5.5868 7.62818 5.19668C7.87265 4.0899 8.12814 3.34462 8.62323 2.31821C8.70119 2.15659 8.86221 2.05093 9.04141 2.04171C11.0466 1.93856 12.3251 2.01028 14.2625 2.44371C14.5804 2.51485 14.8662 2.69558 15.0722 2.948C19.8635 8.8193 21.3943 11.9968 21.9534 16.6216C21.9872 16.9004 21.8964 17.1818 21.7073 17.3895C17.6861 21.8064 14.7759 22.3704 8.75105 20.0604C6.65624 21.5587 5.07425 21.8624 2.25004 21.3106" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
 									</svg>
 								</div>								
-								<div class="text-right dashboard-show-data">
-									<p class="mb-0">{{ __('message.bodypart') }}</p>
-									<h5 class="counter" >{{ $data['dashboard']['total_bodypart'] }}</h5>
+								<div class="dashboard-stat-content">
+									<div class="dashboard-ring" style="--percent: 100; --ring-color: #f9aa00;">
+										<div class="dashboard-ring-value">
+											<strong>{{ $data['dashboard']['total_bodypart'] }}</strong>
+										</div>
+									</div>
+									<div class="dashboard-ring-label">{{ __('message.bodypart') }}</div>
 								</div>
 							</div>
 						</div>
@@ -268,9 +362,13 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 										<path d="M6.60935 6.09382C6.33646 6.21521 6.11215 6.47254 5.98131 6.80756C5.8729 7.08432 5.86916 7.11831 5.85047 7.96799L5.83178 8.84193L5.14019 8.86626C4.51215 8.89048 4.43365 8.90027 4.28786 9.00222C4.04113 9.17209 3.85047 9.42464 3.75328 9.70626C3.67103 9.93932 3.66356 10.0315 3.65234 10.9395L3.64113 11.9252H2.91215C2.18692 11.9252 2.18318 11.9252 2.09346 12.0465L2 12.1631V14.0323V15.9017L2.0972 15.9988C2.19066 16.0959 2.24673 16.1007 2.91963 16.1007H3.64113L3.65234 17.1058C3.66356 18.0914 3.6673 18.1206 3.76449 18.3585C3.81683 18.4945 3.94019 18.6983 4.02991 18.8051C4.31403 19.145 4.39626 19.1742 5.1701 19.1985L5.85047 19.2179V20.053C5.85047 20.8929 5.85047 20.8929 5.96262 21.1892C6.08599 21.5047 6.24673 21.7184 6.4972 21.8884C6.643 21.9903 6.70281 22 7.28973 22C7.90655 22 7.92898 21.9952 8.11586 21.8689C8.34396 21.7135 8.51967 21.4659 8.63928 21.1308L8.72896 20.8832V18.4896V16.1007H11.9813H15.2336V18.2711C15.2336 19.4703 15.2486 20.5725 15.271 20.723C15.3346 21.2377 15.5327 21.6116 15.8729 21.8543C16.0748 22 16.0748 22 16.7103 22C17.2972 22 17.3571 21.9903 17.5029 21.8884C17.7532 21.7184 17.914 21.5047 18.0374 21.1892C18.1495 20.8929 18.1495 20.8929 18.1495 20.053V19.2179L18.8336 19.1985C19.4841 19.1839 19.5215 19.1742 19.7009 19.0527C19.9402 18.8877 20.1121 18.6692 20.2356 18.3585C20.3327 18.1206 20.3364 18.0914 20.3477 17.1058L20.3589 16.1007H21.0804C21.7533 16.1007 21.8094 16.0959 21.9029 15.9988L22 15.9017V14.0372C22 12.2795 21.9963 12.1728 21.929 12.066C21.8579 11.9494 21.843 11.9494 21.1103 11.9348L20.3589 11.9202L20.3477 10.9395C20.3364 10.0655 20.329 9.93437 20.2579 9.73532C20.1458 9.42949 19.9626 9.17209 19.7421 9.0216C19.5589 8.89532 19.5215 8.89048 18.8598 8.86626L18.1682 8.84193L18.1495 7.96799C18.1309 7.16686 18.1234 7.07461 18.0411 6.85611C17.9252 6.55023 17.7047 6.26376 17.4804 6.13266C17.2448 5.99186 16.3925 5.95302 16.0823 6.06955C15.7757 6.18607 15.529 6.46283 15.3757 6.86097L15.2524 7.19113L15.2411 9.55566L15.2299 11.9252H11.9813H8.73269L8.7215 9.48288L8.71031 7.04547L8.59816 6.78328C8.45983 6.46283 8.19443 6.17636 7.93646 6.0744C7.65608 5.96758 6.8673 5.97729 6.60935 6.09382ZM7.90655 6.81242C7.98131 6.87068 8.07848 7.00663 8.1234 7.11345L8.20562 7.30281L8.19816 14.076C8.18689 20.8347 8.18689 20.8542 8.1084 20.9852C7.92898 21.296 7.87665 21.3202 7.28973 21.3202C6.68412 21.3202 6.61683 21.2911 6.45982 20.9269L6.37384 20.7376V14.042C6.37384 7.3902 6.37384 7.34165 6.44861 7.13773C6.59066 6.76386 6.75888 6.68132 7.34581 6.69588C7.71589 6.70559 7.7944 6.72017 7.90655 6.81242ZM17.3346 6.81727C17.4131 6.88039 17.5029 7.01148 17.5477 7.13773C17.6262 7.34165 17.6262 7.36593 17.6262 14.0178V20.6939L17.544 20.9076C17.3906 21.2863 17.3271 21.3202 16.7103 21.3202C16.1234 21.3202 16.071 21.296 15.8916 20.9852C15.8131 20.8542 15.8131 20.8347 15.8019 14.076L15.7944 7.30281L15.8767 7.11345C16.0299 6.75415 16.1869 6.68132 16.7663 6.69588C17.1402 6.70559 17.215 6.72017 17.3346 6.81727ZM5.84299 14.0226L5.83178 18.5041L5.31589 18.5187C4.74767 18.5332 4.56449 18.4896 4.39253 18.3051C4.15702 18.0429 4.16823 18.2759 4.16823 14.0372C4.16823 9.70131 4.15328 9.9587 4.44113 9.68677L4.59066 9.54597H5.22244H5.85047L5.84299 14.0226ZM19.4953 9.61884C19.5552 9.6577 19.6524 9.77419 19.7084 9.87129L19.8131 10.0461L19.8243 13.911C19.8318 16.5328 19.8243 17.8341 19.7944 17.9554C19.7458 18.174 19.544 18.4119 19.3495 18.4798C19.2636 18.509 18.9683 18.5235 18.6841 18.5187L18.1682 18.5041L18.1571 14.0226L18.1495 9.54597H18.7663C19.2448 9.54597 19.4131 9.5605 19.4953 9.61884ZM3.63739 14.0226L3.62618 15.3967H3.08412H2.54206L2.53084 14.0226L2.52337 12.6534H3.08412H3.64487L3.63739 14.0226ZM15.2336 14.0372V15.421L11.9925 15.4112L8.74769 15.3967L8.73642 14.0226L8.72896 12.6534H11.9813H15.2336V14.0372ZM21.4692 14.0226L21.4579 15.3967H20.9159H20.3739L20.3626 14.0226L20.3552 12.6534H20.9159H21.4767L21.4692 14.0226Z" fill="white" stroke="white" stroke-width="0.4"/>
 									</svg>
 								</div>								
-								<div class="text-right dashboard-show-data">
-									<p class="mb-0">{{ __('message.workouttype') }}</p>
-									<h5 class="counter" >{{ $data['dashboard']['total_workouttype'] }}</h5>
+								<div class="dashboard-stat-content">
+									<div class="dashboard-ring" style="--percent: 100; --ring-color: #c03221;">
+										<div class="dashboard-ring-value">
+											<strong>{{ $data['dashboard']['total_workouttype'] }}</strong>
+										</div>
+									</div>
+									<div class="dashboard-ring-label">{{ __('message.workouttype') }}</div>
 								</div>
 							</div>
 						</div>
@@ -286,9 +384,13 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 										<path d="M1.99902 8.50402V7.00612C1.99902 6.58326 2.3459 6.24263 2.76869 6.25032L12.3933 6.4253L22.2071 6.25007C22.6298 6.24252 22.9765 6.58311 22.9765 7.00587V8.50402C22.9765 8.92151 22.6381 9.25995 22.2206 9.25995H16.4162C15.9408 9.25995 15.5834 9.69361 15.6742 10.1603L17.9978 22.0998C18.0886 22.5664 17.7312 23.0001 17.2558 23.0001H16.2843C15.9478 23.0001 15.6518 22.7777 15.5582 22.4544L13.6852 15.9867C13.5916 15.6635 13.2956 15.4411 12.9591 15.4411H11.8413C11.4983 15.4411 11.1983 15.672 11.1105 16.0036L9.40821 22.4375C9.32047 22.7691 9.02045 23.0001 8.67743 23.0001H7.70562C7.23489 23.0001 6.87864 22.5745 6.96149 22.1111L9.10041 10.1489C9.18326 9.68555 8.82701 9.25995 8.35628 9.25995H2.75495C2.33746 9.25995 1.99902 8.92151 1.99902 8.50402Z" stroke="white" stroke-width="1.5"/>
 									</svg>
 								</div>								
-								<div class="text-right dashboard-show-data">
-									<p class="mb-0">{{ __('message.exercise') }}</p>
-									<h5 class="counter" >{{ $data['dashboard']['total_exercise'] }}</h5>
+								<div class="dashboard-stat-content">
+									<div class="dashboard-ring" style="--percent: 100; --ring-color: #8a5cf6;">
+										<div class="dashboard-ring-value">
+											<strong>{{ $data['dashboard']['total_exercise'] }}</strong>
+										</div>
+									</div>
+									<div class="dashboard-ring-label">{{ __('message.exercise') }}</div>
 								</div>
 							</div>
 						</div>
@@ -308,9 +410,13 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 										<path d="M19.2916 8.88902L18.5499 8.77777L18.5499 8.77777L19.2916 8.88902ZM20.8773 7.22454L21.0244 7.95998L21.0244 7.95998L20.8773 7.22454ZM22.1471 7.73544C22.5533 7.6542 22.8167 7.25908 22.7354 6.85291C22.6542 6.44674 22.2591 6.18333 21.8529 6.26456L22.1471 7.73544ZM18.7417 17.6113L20.0333 9.00028L18.5499 8.77777L17.2583 17.3887L18.7417 17.6113ZM21.0244 7.95998L22.1471 7.73544L21.8529 6.26456L20.7302 6.48911L21.0244 7.95998ZM20.0333 9.00028C20.0862 8.64782 20.1178 8.44487 20.1568 8.2985C20.1744 8.23252 20.1885 8.19883 20.1965 8.18288C20.2002 8.17549 20.2024 8.17218 20.2029 8.17144C20.2034 8.17082 20.2034 8.17074 20.2037 8.17041L19.1177 7.13579C18.8906 7.37412 18.7782 7.64686 18.7076 7.91172C18.6418 8.15825 18.5978 8.45884 18.5499 8.77777L20.0333 9.00028ZM20.7302 6.48911C20.414 6.55235 20.1159 6.61086 19.8728 6.68852C19.6117 6.77197 19.3447 6.89746 19.1177 7.13579L20.2037 8.17041C20.2041 8.17009 20.2041 8.17 20.2047 8.16955C20.2054 8.169 20.2086 8.1666 20.2159 8.16256C20.2314 8.15385 20.2644 8.13813 20.3294 8.11734C20.4737 8.07123 20.6749 8.02987 21.0244 7.95998L20.7302 6.48911Z" fill="white"/>
 								</svg>
 								</div>								
-								<div class="text-right dashboard-show-data">
-									<p class="mb-0">{{ __('message.workout') }}</p>
-									<h5 class="counter" >{{ $data['dashboard']['total_workout'] }}</h5>
+								<div class="dashboard-stat-content">
+									<div class="dashboard-ring" style="--percent: 100; --ring-color: #ff7f50;">
+										<div class="dashboard-ring-value">
+											<strong>{{ $data['dashboard']['total_workout'] }}</strong>
+										</div>
+									</div>
+									<div class="dashboard-ring-label">{{ __('message.workout') }}</div>
 								</div>
 							</div>
 						</div>
@@ -329,9 +435,13 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 										</g>
 									</svg>
 								</div>								
-								<div class="text-right dashboard-show-data">
-									<p class="mb-0">{{ __('message.diet') }}</p>
-									<h5 class="counter" >{{ $data['dashboard']['total_diet'] }}</h5>
+								<div class="dashboard-stat-content">
+									<div class="dashboard-ring" style="--percent: 100; --ring-color: #44a5de;">
+										<div class="dashboard-ring-value">
+											<strong>{{ $data['dashboard']['total_diet'] }}</strong>
+										</div>
+									</div>
+									<div class="dashboard-ring-label">{{ __('message.diet') }}</div>
 								</div>
 							</div>
 						</div>
@@ -350,9 +460,13 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 										<path d="M18.7654 6.78078L18.9029 5.56316C19.0109 4.60685 19.0649 4.1287 18.8686 3.93104C18.7624 3.82412 18.618 3.7586 18.4636 3.7473C18.1782 3.72641 17.8198 4.06645 17.1029 4.74654C16.7321 5.09825 16.5468 5.2741 16.34 5.30134C16.2254 5.31643 16.1086 5.30091 16.0028 5.25654C15.8119 5.17646 15.6846 4.95906 15.43 4.52426L14.0878 2.23243C13.6067 1.41081 13.3661 1 13 1C12.6339 1 12.3933 1.41081 11.9122 2.23243L10.57 4.52426C10.3154 4.95906 10.1881 5.17646 9.99716 5.25654C9.89135 5.30091 9.77461 5.31643 9.66002 5.30134C9.45323 5.2741 9.26786 5.09825 8.89712 4.74654C8.18025 4.06645 7.82181 3.72641 7.53639 3.7473C7.38199 3.7586 7.23759 3.82412 7.13139 3.93104C6.93508 4.1287 6.98908 4.60685 7.09708 5.56316L7.2346 6.78078C7.46119 8.78708 7.57449 9.79024 8.28406 10.3951C8.99363 11 10.0571 11 12.184 11H13.816C15.9429 11 17.0064 11 17.7159 10.3951C18.4255 9.79024 18.5388 8.78708 18.7654 6.78078Z" stroke="white" stroke-width="1.5"></path>
 									</svg>
 								</div>								
-								<div class="text-right dashboard-show-data">
-									<p class="mb-0">{{ __('message.no_of_subscription') }}</p>
-									<h5 class="counter" >{{ $data['total_subscription'] }}</h5>
+								<div class="dashboard-stat-content">
+									<div class="dashboard-ring" style="--percent: 100; --ring-color: #60a5fa;">
+										<div class="dashboard-ring-value">
+											<strong>{{ $data['total_subscription'] }}</strong>
+										</div>
+									</div>
+									<div class="dashboard-ring-label">{{ __('message.no_of_subscription') }}</div>
 								</div>
 							</div>
 						</div>
@@ -367,9 +481,13 @@ function ajaxSubscriptionChart(lineChart, pieChart, filter = 'week', type = 'lin
 										<path d="M546.67-426.67q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35ZM240-293.33q-27.5 0-47.08-19.59-19.59-19.58-19.59-47.08v-373.33q0-27.5 19.59-47.09Q212.5-800 240-800h613.33q27.5 0 47.09 19.58Q920-760.83 920-733.33V-360q0 27.5-19.58 47.08-19.59 19.59-47.09 19.59H240ZM333.33-360H760q0-39 27.17-66.17 27.16-27.16 66.16-27.16V-640q-39 0-66.16-27.17Q760-694.33 760-733.33H333.33q0 39-27.16 66.16Q279-640 240-640v186.67q39 0 66.17 27.16Q333.33-399 333.33-360ZM800-160H106.67q-27.5 0-47.09-19.58Q40-199.17 40-226.67V-680h66.67v453.33H800V-160ZM240-360v-373.33V-360Z"/>
 									</svg>
 								</div>								
-								<div class="text-right dashboard-show-data">
-									<p class="mb-0">{{ __('message.subscription_revenue') }}</p>
-									<h5 class="counter" data-toggle="tooltip" title="{{ $data['subscription_amount']  }}"> {{ $data['total_subscription_amount'] }}</h5>
+								<div class="dashboard-stat-content">
+									<div class="dashboard-ring" style="--percent: 100; --ring-color: #22c55e;">
+										<div class="dashboard-ring-value">
+											<strong>{{ $data['total_subscription_amount'] }}</strong>
+										</div>
+									</div>
+									<div class="dashboard-ring-label">{{ __('message.subscription_revenue') }}</div>
 								</div>
 							</div>
 						</div>
