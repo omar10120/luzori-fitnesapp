@@ -74,7 +74,7 @@
   --bs-black-rgb: 0, 0, 0;
   --bs-body-color-rgb: 138, 146, 166;
   --bs-body-bg-rgb: 245, 246, 250;
-  --bs-font-sans-serif: 'Cairo', "Inter", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --bs-font-sans-serif: 'Cairo';
   --bs-font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --bs-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
   --bs-body-font-family: var(--bs-font-sans-serif);
@@ -13045,7 +13045,7 @@ thead, tbody, tfoot, tr, td, th{
   display: block;
   position: fixed;
   width: 100%;
-  max-width: 16.2rem;
+  max-width: 14rem;
   top: 0;
   bottom: 0;
   z-index: 910;
