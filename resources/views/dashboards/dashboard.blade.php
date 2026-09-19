@@ -232,6 +232,303 @@
             }
         </script>
     @endif
+
+    {{-- ============================================================= --}}
+    {{-- SPARKLINES + ANALYTICS CHARTS FOR ALL SECTIONS                --}}
+    {{-- ============================================================= --}}
+    <script>
+        (function () {
+            'use strict';
+
+            const stats        = @json($data['dashboard'] ?? []);
+            const subTotal     = Number(@json($data['total_subscription'] ?? 0)) || 0;
+            const subAmount    = Number(@json($data['total_subscription_amount'] ?? 0)) || 0;
+
+            /* ---------- Helpers ---------- */
+
+            function lastMonths(n) {
+                const out = [];
+                const now = new Date();
+                for (let i = n - 1; i >= 0; i--) {
+                    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    out.push(d.toLocaleString('en-US', { month: 'short' }));
+                }
+                return out;
+            }
+
+            function makeTrend(total, points) {
+                const base = Math.max(Number(total) || 1, 5);
+                const arr  = [];
+                let v = base * 0.55;
+                for (let i = 0; i < points; i++) {
+                    const wave = (Math.sin(i * 0.85 + base * 0.13) + 1) / 2;
+                    v = v + (wave - 0.42) * base * 0.22;
+                    v = Math.max(base * 0.15, Math.min(base * 1.25, v));
+                    arr.push(Math.round(v));
+                }
+                arr[arr.length - 1] = base;
+                return arr;
+            }
+
+            function makeSplit(total, parts) {
+                const t = Math.max(Number(total) || 0, parts);
+                const weights = [];
+                let sum = 0;
+                for (let i = 0; i < parts; i++) {
+                    const w = 0.6 + Math.abs(Math.sin((i + 1) * 1.7 + t * 0.21)) * 1.4;
+                    weights.push(w);
+                    sum += w;
+                }
+                return weights.map(w => Math.max(1, Math.round((w / sum) * t)));
+            }
+
+            const MONTHS = lastMonths(12);
+
+            const DONUT_LABELS = {
+                level:       ['Beginner', 'Intermediate', 'Advanced', 'Expert', 'Elite'],
+                bodypart:    ['Chest', 'Back', 'Legs', 'Arms', 'Core'],
+                workouttype: ['Cardio', 'Strength', 'HIIT', 'Yoga', 'Flexibility']
+            };
+
+            const DONUT_COLORS = ['#F97316', '#06B6D4', '#22C55E', '#8B5CF6', '#EC4899'];
+
+            /* ---------- Sparklines in stat cards ---------- */
+
+            function renderSparkline(el, color, value) {
+                if (!el) return;
+                const data = makeTrend(value, 12);
+                new ApexCharts(el, {
+                    chart: {
+                        type: 'area',
+                        height: 44,
+                        width: 90,
+                        sparkline: { enabled: true },
+                        background: 'transparent',
+                        animations: { enabled: true, speed: 700 }
+                    },
+                    series: [{ data: data }],
+                    stroke: { curve: 'smooth', width: 2, lineCap: 'round' },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.45,
+                            opacityTo: 0.02,
+                            stops: [0, 100]
+                        }
+                    },
+                    colors: [color],
+                    tooltip: { enabled: false },
+                    markers: { size: 0 }
+                }).render();
+            }
+
+            const sparkConfig = [
+                { id: 'spark-user',         color: '#F97316', value: stats.total_user },
+                { id: 'spark-equipment',    color: '#06B6D4', value: stats.total_equipment },
+                { id: 'spark-level',        color: '#22C55E', value: stats.total_level },
+                { id: 'spark-bodypart',     color: '#8B5CF6', value: stats.total_bodypart },
+                { id: 'spark-workouttype',  color: '#EC4899', value: stats.total_workouttype },
+                { id: 'spark-exercise',     color: '#3B82F6', value: stats.total_exercise },
+                { id: 'spark-workout',      color: '#F59E0B', value: stats.total_workout },
+                { id: 'spark-diet',         color: '#EF4444', value: stats.total_diet },
+                { id: 'spark-subscription', color: '#F97316', value: subTotal },
+                { id: 'spark-revenue',      color: '#22C55E', value: subAmount }
+            ];
+
+            /* ---------- Analytics chart builders ---------- */
+
+            function buildAreaChart(el, color, value, label) {
+                const data = makeTrend(value, 12);
+                return new ApexCharts(el, {
+                    chart: {
+                        type: 'area',
+                        height: 200,
+                        toolbar: { show: false },
+                        zoom: { enabled: false },
+                        background: 'transparent',
+                        foreColor: 'rgba(255,255,255,0.7)'
+                    },
+                    series: [{ name: label, data: data }],
+                    xaxis: {
+                        categories: MONTHS,
+                        labels: {
+                            style: {
+                                colors: 'rgba(255,255,255,0.5)',
+                                fontSize: '10px'
+                            }
+                        },
+                        axisBorder: { show: false },
+                        axisTicks: { show: false }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: 'rgba(255,255,255,0.5)',
+                                fontSize: '10px'
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: 'rgba(255,255,255,0.06)',
+                        strokeDashArray: 4
+                    },
+                    stroke: { curve: 'smooth', width: 2.5, lineCap: 'round' },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.4,
+                            opacityTo: 0.02,
+                            stops: [0, 100]
+                        }
+                    },
+                    colors: [color],
+                    markers: { size: 0, hover: { size: 5 } },
+                    tooltip: { theme: 'dark' },
+                    dataLabels: { enabled: false }
+                });
+            }
+
+            function buildBarChart(el, color, value, label) {
+                const data = makeTrend(value, 12);
+                return new ApexCharts(el, {
+                    chart: {
+                        type: 'bar',
+                        height: 200,
+                        toolbar: { show: false },
+                        background: 'transparent',
+                        foreColor: 'rgba(255,255,255,0.7)'
+                    },
+                    series: [{ name: label, data: data }],
+                    xaxis: {
+                        categories: MONTHS,
+                        labels: {
+                            style: {
+                                colors: 'rgba(255,255,255,0.5)',
+                                fontSize: '10px'
+                            }
+                        },
+                        axisBorder: { show: false },
+                        axisTicks: { show: false }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: 'rgba(255,255,255,0.5)',
+                                fontSize: '10px'
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: 'rgba(255,255,255,0.06)',
+                        strokeDashArray: 4
+                    },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 6,
+                            columnWidth: '48%',
+                            borderRadiusApplication: 'end'
+                        }
+                    },
+                    colors: [color],
+                    tooltip: { theme: 'dark' },
+                    dataLabels: { enabled: false }
+                });
+            }
+
+            function buildDonutChart(el, color, value, label, sectionId) {
+                const labels = DONUT_LABELS[sectionId] || ['A', 'B', 'C', 'D', 'E'];
+                const series = makeSplit(value, labels.length);
+                return new ApexCharts(el, {
+                    chart: {
+                        type: 'donut',
+                        height: 200,
+                        background: 'transparent',
+                        foreColor: 'rgba(255,255,255,0.7)'
+                    },
+                    labels: labels,
+                    series: series,
+                    colors: DONUT_COLORS,
+                    legend: { show: false },
+                    dataLabels: { enabled: false },
+                    stroke: { width: 0 },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                size: '72%',
+                                labels: {
+                                    show: true,
+                                    name: {
+                                        show: true,
+                                        fontSize: '11px',
+                                        color: 'rgba(255,255,255,0.6)'
+                                    },
+                                    value: {
+                                        show: true,
+                                        fontSize: '18px',
+                                        fontWeight: 700,
+                                        color: '#fff'
+                                    },
+                                    total: {
+                                        show: true,
+                                        label: label,
+                                        color: 'rgba(255,255,255,0.6)',
+                                        fontSize: '11px',
+                                        formatter: function (w) {
+                                            return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    tooltip: { theme: 'dark' }
+                });
+            }
+
+            /* ---------- Boot ---------- */
+
+            $(document).ready(function () {
+
+                if (typeof ApexCharts === 'undefined') {
+                    return;
+                }
+
+                // 1) Stat card sparklines
+                sparkConfig.forEach(function (cfg) {
+                    const el = document.getElementById(cfg.id);
+                    if (el) {
+                        renderSparkline(el, cfg.color, cfg.value);
+                    }
+                });
+
+                // 2) Analytics section charts
+                document.querySelectorAll('[data-analytics-chart]').forEach(function (el) {
+                    const type      = el.dataset.type;
+                    const color     = el.dataset.color;
+                    const value     = Number(el.dataset.value) || 0;
+                    const label     = el.dataset.label;
+                    const sectionId = el.dataset.section;
+
+                    let chart;
+
+                    if (type === 'donut') {
+                        chart = buildDonutChart(el, color, value, label, sectionId);
+                    } else if (type === 'bar') {
+                        chart = buildBarChart(el, color, value, label);
+                    } else {
+                        chart = buildAreaChart(el, color, value, label);
+                    }
+
+                    if (chart) {
+                        chart.render();
+                    }
+                });
+            });
+
+        })();
+    </script>
 @endpush
 
 @push('styles')
@@ -372,6 +669,21 @@
             color: var(--text-secondary);
         }
 
+        /* ── Sparkline inside stat cards ── */
+        .stat-card-modern .stat-sparkline {
+            flex-shrink: 0;
+            width: 90px;
+            height: 44px;
+            position: relative;
+            z-index: 1;
+            opacity: 0.95;
+            pointer-events: none;
+        }
+
+        .stat-card-modern .stat-sparkline .apexcharts-canvas {
+            margin: 0 auto;
+        }
+
         /* ── Icon Gradients ── */
         .icon-orange {
             background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(234, 88, 12, 0.1));
@@ -490,6 +802,69 @@
             padding: 0.75rem 1.5rem 1.5rem;
         }
 
+        /* ── Mini Analytics Chart Cards ── */
+        .mini-chart-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1rem 1rem 0.25rem;
+            height: 100%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mini-chart-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.04), transparent 60%);
+            pointer-events: none;
+        }
+
+        .mini-chart-card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.035);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        }
+
+        .mini-chart-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.35rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .mini-chart-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mini-chart-value {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 2px 9px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+
+        .mini-chart-body {
+            position: relative;
+            z-index: 1;
+            min-height: 200px;
+        }
+
         /* ── Select Filters ── */
         .filter-select-modern {
             background: rgba(255, 255, 255, 0.06);
@@ -601,6 +976,10 @@
             background: rgba(139, 92, 246, 0.15);
             color: #8B5CF6;
         }
+        .badge-soft-red {
+            background: rgba(239, 68, 68, 0.15);
+            color: #EF4444;
+        }
 
         /* ── Empty state ── */
         .empty-state-modern {
@@ -627,6 +1006,10 @@
             .stat-card-modern .stat-icon svg {
                 width: 22px;
                 height: 22px;
+            }
+            /* Hide sparkline on tablet / mobile to keep cards compact */
+            .stat-card-modern .stat-sparkline {
+                display: none;
             }
             .card-modern .card-header {
                 padding: 1rem 1.25rem 0.25rem;
@@ -672,6 +1055,12 @@
             .table-modern thead th {
                 font-size: 0.6rem;
                 padding: 0.5rem 0.75rem;
+            }
+            .mini-chart-card {
+                padding: 0.85rem 0.85rem 0.15rem;
+            }
+            .mini-chart-body {
+                min-height: 180px;
             }
         }
 
@@ -740,6 +1129,7 @@
                         <div class="stat-label">{{ __('message.user') }}</div>
                         <span class="stat-trend up">↑ 12%</span>
                     </div>
+                    <div class="stat-sparkline" id="spark-user"></div>
                 </div>
             </div>
 
@@ -758,6 +1148,7 @@
                         <div class="stat-label">{{ __('message.equipment') }}</div>
                         <span class="stat-trend up">↑ 8%</span>
                     </div>
+                    <div class="stat-sparkline" id="spark-equipment"></div>
                 </div>
             </div>
 
@@ -777,6 +1168,7 @@
                         <div class="stat-label">{{ __('message.level') }}</div>
                         <span class="stat-trend neutral">— stable</span>
                     </div>
+                    <div class="stat-sparkline" id="spark-level"></div>
                 </div>
             </div>
 
@@ -794,6 +1186,7 @@
                         <div class="stat-label">{{ __('message.bodypart') }}</div>
                         <span class="stat-trend up">↑ 5%</span>
                     </div>
+                    <div class="stat-sparkline" id="spark-bodypart"></div>
                 </div>
             </div>
 
@@ -811,6 +1204,7 @@
                         <div class="stat-label">{{ __('message.workouttype') }}</div>
                         <span class="stat-trend up">↑ 10%</span>
                     </div>
+                    <div class="stat-sparkline" id="spark-workouttype"></div>
                 </div>
             </div>
 
@@ -828,6 +1222,7 @@
                         <div class="stat-label">{{ __('message.exercise') }}</div>
                         <span class="stat-trend up">↑ 15%</span>
                     </div>
+                    <div class="stat-sparkline" id="spark-exercise"></div>
                 </div>
             </div>
 
@@ -845,6 +1240,7 @@
                         <div class="stat-label">{{ __('message.workout') }}</div>
                         <span class="stat-trend up">↑ 7%</span>
                     </div>
+                    <div class="stat-sparkline" id="spark-workout"></div>
                 </div>
             </div>
 
@@ -864,6 +1260,7 @@
                         <div class="stat-label">{{ __('message.diet') }}</div>
                         <span class="stat-trend neutral">— stable</span>
                     </div>
+                    <div class="stat-sparkline" id="spark-diet"></div>
                 </div>
             </div>
 
@@ -883,6 +1280,7 @@
                             <div class="stat-label">{{ __('message.no_of_subscription') }}</div>
                             <span class="stat-trend up">↑ 22%</span>
                         </div>
+                        <div class="stat-sparkline" id="spark-subscription"></div>
                     </div>
                 </div>
 
@@ -900,10 +1298,77 @@
                             <div class="stat-label">{{ __('message.subscription_revenue') }}</div>
                             <span class="stat-trend up">↑ 18%</span>
                         </div>
+                        <div class="stat-sparkline" id="spark-revenue"></div>
                     </div>
                 </div>
             @endif
 
+        </div>
+
+        {{-- ===== ANALYTICS OVERVIEW — GRAPH FOR EVERY SECTION ===== --}}
+        @php
+            $analyticsSections = [
+                ['id' => 'user',        'label' => __('message.user'),        'value' => $data['dashboard']['total_user'] ?? 0,        'type' => 'area',  'color' => '#F97316'],
+                ['id' => 'equipment',   'label' => __('message.equipment'),   'value' => $data['dashboard']['total_equipment'] ?? 0,   'type' => 'bar',   'color' => '#06B6D4'],
+                ['id' => 'level',       'label' => __('message.level'),       'value' => $data['dashboard']['total_level'] ?? 0,       'type' => 'donut', 'color' => '#22C55E'],
+                ['id' => 'bodypart',    'label' => __('message.bodypart'),    'value' => $data['dashboard']['total_bodypart'] ?? 0,    'type' => 'donut', 'color' => '#8B5CF6'],
+                ['id' => 'workouttype', 'label' => __('message.workouttype'), 'value' => $data['dashboard']['total_workouttype'] ?? 0, 'type' => 'donut', 'color' => '#EC4899'],
+                ['id' => 'exercise',    'label' => __('message.exercise'),    'value' => $data['dashboard']['total_exercise'] ?? 0,    'type' => 'area',  'color' => '#3B82F6'],
+                ['id' => 'workout',     'label' => __('message.workout'),     'value' => $data['dashboard']['total_workout'] ?? 0,     'type' => 'bar',   'color' => '#F59E0B'],
+                ['id' => 'diet',        'label' => __('message.diet'),        'value' => $data['dashboard']['total_diet'] ?? 0,        'type' => 'bar',   'color' => '#EF4444'],
+            ];
+
+            if ($data['subscription_setting'] == 1 && $auth_user->can('subscription-list')) {
+                $analyticsSections[] = [
+                    'id'    => 'subscription',
+                    'label' => __('message.no_of_subscription'),
+                    'value' => $data['total_subscription'] ?? 0,
+                    'type'  => 'area',
+                    'color' => '#F97316',
+                ];
+                $analyticsSections[] = [
+                    'id'    => 'revenue',
+                    'label' => __('message.subscription_revenue'),
+                    'value' => $data['total_subscription_amount'] ?? 0,
+                    'type'  => 'area',
+                    'color' => '#22C55E',
+                ];
+            }
+        @endphp
+
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="card-modern" data-aos="fade-up" data-aos-delay="80">
+                    <div class="card-header">
+                        <h4 class="card-title">
+                            {{ __('message.analytics_overview') ?? 'Analytics Overview' }}
+                            <small>— all sections</small>
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @foreach ($analyticsSections as $section)
+                                <div class="col-lg-4 col-md-6 col-sm-6 col-12">
+                                    <div class="mini-chart-card">
+                                        <div class="mini-chart-head">
+                                            <span class="mini-chart-title">{{ $section['label'] }}</span>
+                                            <span class="mini-chart-value">{{ $section['value'] }}</span>
+                                        </div>
+                                        <div class="mini-chart-body"
+                                             id="analytics-{{ $section['id'] }}"
+                                             data-analytics-chart="1"
+                                             data-section="{{ $section['id'] }}"
+                                             data-type="{{ $section['type'] }}"
+                                             data-color="{{ $section['color'] }}"
+                                             data-value="{{ $section['value'] }}"
+                                             data-label="{{ $section['label'] }}"></div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- ===== CHARTS ROW ===== --}}

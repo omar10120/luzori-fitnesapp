@@ -666,4 +666,5 @@ return [
     'package_exercise_replace_note' => 'Changing the exercise replaces the package exercise copy with a fresh clone.',
     'package_exercise_clone_note' => 'Select an exercise to load and edit its package exercise copy before saving.',
     'based' => 'Based',
+    'analytics_overview' => 'Analytics Overview '
 ];
