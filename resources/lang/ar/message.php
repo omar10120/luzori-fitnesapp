@@ -41,7 +41,7 @@ return [
     'cancel' => 'يلغي',
     'reset' => 'إعادة ضبط',
     'admin' => 'مسؤل',
-    'user' => 'مستخدم',
+    'user' => 'عميل',
     'account_setting' => 'إعدادات الحساب',
     'active' => 'نشيط',
     'inactive' => 'غير نشط',
