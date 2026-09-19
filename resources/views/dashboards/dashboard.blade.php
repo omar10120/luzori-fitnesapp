@@ -1105,6 +1105,106 @@
         [data-aos].aos-animate {
             pointer-events: auto;
         }
+
+        /* Light mode uses a separate contrast palette from the dark dashboard. */
+        body:not(.dark) .dashboard-modern {
+            --bg-card: #ffffff;
+            --border-glow: #e5e7eb;
+            --text-primary: #172033;
+            --text-secondary: #526071;
+            --text-muted: #8491a3;
+            --shadow-card: 0 10px 28px rgba(32, 45, 64, 0.1);
+        }
+
+        body:not(.dark) .dashboard-modern .stat-card-modern,
+        body:not(.dark) .dashboard-modern .card-modern {
+            background: #ffffff;
+            border-color: #e5e7eb;
+            box-shadow: 0 10px 28px rgba(32, 45, 64, 0.08);
+        }
+
+        body:not(.dark) .dashboard-modern .stat-card-modern::before,
+        body:not(.dark) .dashboard-modern .mini-chart-card::before {
+            background: radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.035), transparent 70%);
+        }
+
+        body:not(.dark) .dashboard-modern .stat-card-modern:hover,
+        body:not(.dark) .dashboard-modern .card-modern:hover,
+        body:not(.dark) .dashboard-modern .mini-chart-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 14px 32px rgba(32, 45, 64, 0.12);
+        }
+
+        body:not(.dark) .dashboard-modern .mini-chart-card {
+            background: #f8fafc;
+            border-color: #e5e7eb;
+        }
+
+        body:not(.dark) .dashboard-modern .stat-trend.neutral,
+        body:not(.dark) .dashboard-modern .mini-chart-value {
+            background: #eef2f7;
+            color: #526071;
+        }
+
+        body:not(.dark) .dashboard-modern .table-modern thead th {
+            color: #7b8798;
+            border-bottom-color: #e5e7eb;
+        }
+
+        body:not(.dark) .dashboard-modern .table-modern tbody td {
+            color: #526071;
+            border-bottom-color: #eef2f7;
+        }
+
+        body:not(.dark) .dashboard-modern .text-white {
+            color: #172033 !important;
+        }
+
+        body:not(.dark) .dashboard-modern .filter-select-modern {
+            color: #172033;
+            background-color: #f8fafc;
+            border-color: #d8dee8;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23526071' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+
+        body:not(.dark) .dashboard-modern .filter-select-modern option {
+            background: #ffffff;
+            color: #172033;
+        }
+
+        body:not(.dark) .dashboard-modern .apexcharts-text,
+        body:not(.dark) .dashboard-modern .apexcharts-legend-text {
+            fill: #526071 !important;
+            color: #526071 !important;
+        }
+
+        body:not(.dark) .dashboard-modern .apexcharts-title-text,
+        body:not(.dark) .dashboard-modern .apexcharts-datalabel-label,
+        body:not(.dark) .dashboard-modern .apexcharts-datalabel-value {
+            fill: #172033 !important;
+        }
+
+        body:not(.dark) .dashboard-modern .apexcharts-gridline {
+            stroke: #e5e7eb !important;
+        }
+
+        body:not(.dark) .dashboard-modern .apexcharts-xaxis-tick,
+        body:not(.dark) .dashboard-modern .apexcharts-yaxis line,
+        body:not(.dark) .dashboard-modern .apexcharts-xaxis line {
+            stroke: #d8dee8 !important;
+        }
+
+        body:not(.dark) .dashboard-modern .apexcharts-tooltip.apexcharts-theme-dark {
+            background: #ffffff !important;
+            border-color: #e5e7eb !important;
+            box-shadow: 0 10px 28px rgba(32, 45, 64, 0.16) !important;
+        }
+
+        body:not(.dark) .dashboard-modern .apexcharts-tooltip .apexcharts-tooltip-title,
+        body:not(.dark) .dashboard-modern .apexcharts-tooltip .apexcharts-tooltip-text-y-label,
+        body:not(.dark) .dashboard-modern .apexcharts-tooltip .apexcharts-tooltip-text-y-value {
+            color: #172033 !important;
+        }
     </style>
 @endpush
 
