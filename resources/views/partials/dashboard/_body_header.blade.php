@@ -219,6 +219,35 @@
               min-width: 0;
           }
       }
+
+      .create-exercise-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+    @media (max-width: 991.98px) {
+        /* Collapsed navbar: stack items cleanly */
+        .create-exercise-item {
+            width: 100%;
+            margin: 0.5rem 0 0.25rem;
+        }
+
+        .create-exercise-item .create-exercise-btn {
+            width: 100%;
+            min-height: 42px;          /* comfortable tap target */
+            padding: 0.6rem 1rem;
+            margin-top: 0 !important;  /* neutralize mt-lg-1 on mobile */
+            font-size: 0.9rem;
+        }
+
+        /* keep icon-only dropdowns (bell / theme / lang / avatar) inline */
+        .navbar-list > .nav-item:not(.create-exercise-item):not(.client-search) {
+            display: inline-flex;
+        }
+    }
   </style>
   <script>
       $(document).ready(function() {
@@ -375,10 +404,10 @@
               <div id="client-search-results" class="client-search-results"></div>
           </div>
         </li>
-        <li class="nav-item">
-          <a href="{{ url('/admin/exercise/create') }}" class="btn btn-primary btn-sm rounded-pill px-3 mt-1">
-            Create New Exercise
-          </a>
+        <li class="nav-item create-exercise-item">
+            <a href="{{ url('/admin/exercise/create') }}" class="btn btn-primary btn-sm rounded-pill px-3 mt-lg-1 create-exercise-btn">
+                Create New Exercise
+            </a>
         </li>
         <li class="nav-item dropdown notification-dropdown">
           <a class="nav-link notification-link" href="#" id="navbarNotificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
