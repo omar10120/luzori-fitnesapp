@@ -228,26 +228,113 @@
     line-height: 1.2;
 }
 
-    @media (max-width: 991.98px) {
-        /* Collapsed navbar: stack items cleanly */
-        .create-exercise-item {
-            width: 100%;
-            margin: 0.5rem 0 0.25rem;
-        }
+   /* =========================================================
+   MOBILE FIXES (collapsed navbar ≤ 991.98px)
+   ========================================================= */
+@media (max-width: 991.98px) {
 
-        .create-exercise-item .create-exercise-btn {
-            width: 100%;
-            min-height: 42px;          /* comfortable tap target */
-            padding: 0.6rem 1rem;
-            margin-top: 0 !important;  /* neutralize mt-lg-1 on mobile */
-            font-size: 0.9rem;
-        }
-
-        /* keep icon-only dropdowns (bell / theme / lang / avatar) inline */
-        .navbar-list > .nav-item:not(.create-exercise-item):not(.client-search) {
-            display: inline-flex;
-        }
+    /* 1. Turn the collapsed list into a wrap-friendly flex row */
+    .navbar-list {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 0.75rem !important;
+        margin-bottom: 0.5rem !important;
+        gap: 0.5rem;
     }
+
+    /* 2. Search = full-width row */
+    .navbar-list > .client-search {
+        flex: 0 0 100%;
+        max-width: 100%;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+    }
+    .client-search .client-search-input {
+        width: 100%;
+        min-width: 0;
+        height: 42px;              /* match button height */
+    }
+
+    /* 3. Create-Exercise button = full-width row */
+    .navbar-list > .create-exercise-item {
+        flex: 0 0 100%;
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+    }
+    .create-exercise-item .create-exercise-btn {
+        width: 100%;
+        min-height: 44px;          /* proper tap target */
+        padding: 0.6rem 1rem;
+        margin-top: 0 !important;  /* kill mt-lg-1 */
+        font-size: 0.9rem;
+    }
+
+    /* 4. All icon dropdowns sit in one row */
+    .navbar-list > .nav-item:not(.client-search):not(.create-exercise-item) {
+        flex: 0 0 auto;
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* 5. Normalize every icon button to the same square size */
+    .notification-link,
+    .theme-scheme-dropdown .sit_color_theam,
+    .navbar-list > .nav-item.dropdown > .nav-link {
+        width: 42px;
+        height: 42px;
+        padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    /* Notification badge stays put */
+    .notification-badge {
+        top: 4px;
+        right: 4px;
+    }
+
+    /* 6. Language flag + avatar sizing */
+    .navbar-list .selected-lang {
+        max-height: 22px;
+        width: auto;
+    }
+    .navbar-list .avatar-50 {
+        width: 34px;
+        height: 34px;
+    }
+    /* hide username caption on mobile (already hidden by d-md-block, extra safety) */
+    .navbar-list .caption {
+        display: none !important;
+    }
+
+    /* 7. Dropdown panels fit the screen */
+    .notification-menu,
+    .client-search-results {
+        width: min(340px, calc(100vw - 2rem));
+        right: 0;
+    }
+
+    /* 8. Toggler alignment */
+    .navbar-toggler {
+        margin-left: auto;
+    }
+}
+
+/* keep this base rule outside the media query */
+.create-exercise-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    line-height: 1.2;
+}
   </style>
   <script>
       $(document).ready(function() {
