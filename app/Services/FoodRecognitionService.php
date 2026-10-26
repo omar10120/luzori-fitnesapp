@@ -24,7 +24,9 @@ class FoodRecognitionService
      */
     public function recognize(User $user, UploadedFile $file, string $locale = 'en'): array
     {
-        // $this->checkSubscription($user);
+        // Hard cap below PHP's max_execution_time (60s) so any remaining hang
+        // fails at 50s with a catchable exception, not at 60s with a fatal.
+        @set_time_limit(50);
 
         $subscription = $this->getActiveSubscription($user);
         $this->assertWithinLimit($user, $subscription);
@@ -32,17 +34,63 @@ class FoodRecognitionService
         // Call third‑party API
         $url = config('caloriemama.url') . '?user_key=' . config('caloriemama.key');
 
+        // Guard: getRealPath() can return false — file_get_contents(false) reads STDIN and blocks forever.
+        $realPath = $file->getRealPath();
+        if ($realPath === false || ! is_readable($realPath)) {
+            Log::error('Uploaded food image is not readable', [
+                'original_name' => $file->getClientOriginalName(),
+            ]);
+            return $this->persistAndBuildResult(
+                $user,
+                $subscription,
+                $file,
+                null,
+                null,
+                500,
+                'Uploaded file is not readable.',
+                'en'
+            );
+        }
+
+        $stream = fopen($realPath, 'rb');
+        if ($stream === false) {
+            return $this->persistAndBuildResult(
+                $user,
+                $subscription,
+                $file,
+                null,
+                null,
+                500,
+                'Failed to open uploaded file.',
+                'en'
+            );
+        }
+
         try {
             $response = Http::attach(
                 'media',
-                file_get_contents($file->getRealPath()),
-                $file->getClientOriginalName()
+                $stream,
+                $file->getClientOriginalName(),
+                ['Content-Type' => $file->getMimeType() ?: 'application/octet-stream']
             )
-                ->timeout(30)
-                ->retry(2, 500)
+                // Windows: PHP may try IPv6 first and hang. CLI cURL falls back to IPv4.
+                ->withOptions(['force_ip_resolve' => 'v4'])
+                ->connectTimeout(10)   // bound DNS + TCP + TLS handshake
+                ->timeout(20)          // per-attempt total → 2×20 + 0.3s ≈ 40.3s < 50s
+                ->retry(
+                    times: 2,
+                    sleepMilliseconds: 300,
+                    // Only retry transient connection failures — never 4xx/5xx bodies.
+                    when: fn (\Throwable $e) => $e instanceof \Illuminate\Http\Client\ConnectionException,
+                    throw: false
+                )
                 ->post($url);
         } catch (\Throwable $e) {
-            Log::error('Food recognition request failed: ' . $e->getMessage());
+            Log::error('Food recognition request failed', [
+                'class'   => get_class($e),
+                'message' => $e->getMessage(),
+                'code'    => $e->getCode(),
+            ]);
             return $this->persistAndBuildResult(
                 $user,
                 $subscription,
@@ -53,10 +101,14 @@ class FoodRecognitionService
                 $e->getMessage(),
                 'en'
             );
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
         }
 
         $decodedResponse = $response->json();
-        if (!is_array($decodedResponse)) {
+        if (! is_array($decodedResponse)) {
             $decodedResponse = ['raw' => $response->body()];
         }
 
@@ -72,7 +124,7 @@ class FoodRecognitionService
             }
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return $this->persistAndBuildResult(
                 $user,
                 $subscription,
@@ -110,7 +162,7 @@ class FoodRecognitionService
         ?string $errorMessage = null,
         string $lang = 'en'
     ): array {
-        $topItem = data_get($englishResponse, 'results.0.items.0', []);
+        $topItem   = data_get($englishResponse, 'results.0.items.0', []);
         $nutrition = data_get($topItem, 'nutrition', []);
         $isSuccess = $httpStatus >= 200 && $httpStatus < 300;
 
@@ -150,7 +202,7 @@ class FoodRecognitionService
             return $history;
         });
 
-        $used = $this->subscriptionUsageCount($user, $subscription);
+        $used  = $this->subscriptionUsageCount($user, $subscription);
         $limit = (int) $subscription->food_recognition_limit;
 
         $clientData = ($lang === 'ar' && $arabicResponse) ? $arabicResponse : $englishResponse;
@@ -163,7 +215,7 @@ class FoodRecognitionService
             'http_status'        => $httpStatus,
         ];
 
-        if (!$isSuccess && $errorMessage) {
+        if (! $isSuccess && $errorMessage) {
             if ($lang === 'ar') {
                 $result['message'] = $this->translateText($errorMessage, new GoogleTranslate('ar'));
             } else {
@@ -178,7 +230,7 @@ class FoodRecognitionService
     {
         $subscription = $user->subscriptionPackage;
 
-        if (!$subscription) {
+        if (! $subscription) {
             throw new HttpResponseException(
                 json_custom_response([
                     'success' => false,
@@ -190,13 +242,10 @@ class FoodRecognitionService
         return $subscription;
     }
 
-    
-    
-
     protected function assertWithinLimit(User $user, Subscription $subscription): void
     {
         $limit = (int) $subscription->food_recognition_limit;
-        $used = $this->subscriptionUsageCount($user, $subscription);
+        $used  = $this->subscriptionUsageCount($user, $subscription);
 
         if ($limit <= 0 || $used >= $limit) {
             throw new HttpResponseException(
@@ -218,9 +267,7 @@ class FoodRecognitionService
             ->count();
     }
 
-    /**
-     * Recursively divide all 'calories' values by 10.
-     */
+    
     private function divideCaloriesByTen(array $data): array
     {
         array_walk_recursive($data, function (&$value, $key) {
@@ -231,9 +278,7 @@ class FoodRecognitionService
         return $data;
     }
 
-    /**
-     * Translate relevant fields (name, group, message) to a target language.
-     */
+   
     private function translateResponseToLanguage(array $data, string $targetLocale): array
     {
         $translator = new GoogleTranslate($targetLocale);
@@ -246,44 +291,49 @@ class FoodRecognitionService
             $data['lang'] = $targetLocale;
         }
 
-        if (isset($data['results']) && is_array($data['results'])) {
-            foreach ($data['results'] as &$resultGroup) {
-                if (isset($resultGroup['group']) && is_string($resultGroup['group'])) {
-                    $resultGroup['group'] = $this->translateText($resultGroup['group'], $translator);
-                }
-                if (isset($resultGroup['items']) && is_array($resultGroup['items'])) {
-                    foreach ($resultGroup['items'] as &$item) {
-                        if (isset($item['name']) && is_string($item['name'])) {
-                            $item['name'] = $this->translateText($item['name'], $translator);
-                        }
-                        if (isset($item['group']) && is_string($item['group'])) {
-                            $item['group'] = $this->translateText($item['group'], $translator);
-                        }
-                    }
-                }
+        // ---- TOP ITEM ONLY (latency-safe) ----
+        $topGroup = data_get($data, 'results.0.group');
+        if (is_string($topGroup)) {
+            $data['results'][0]['group'] = $this->translateText($topGroup, $translator);
+        }
+
+        $topItem = data_get($data, 'results.0.items.0');
+        if (is_array($topItem)) {
+            if (isset($topItem['name']) && is_string($topItem['name'])) {
+                $data['results'][0]['items'][0]['name'] = $this->translateText($topItem['name'], $translator);
+            }
+            if (isset($topItem['group']) && is_string($topItem['group'])) {
+                $data['results'][0]['items'][0]['group'] = $this->translateText($topItem['group'], $translator);
             }
         }
+      
 
         return $data;
     }
 
     private function translateText(string $text, GoogleTranslate $translator): string
     {
-        if (empty($text)) {
+        if ($text === '') {
             return $text;
         }
+
         try {
             return $translator->translate($text);
-        } catch (\Exception $e) {
-            Log::warning("Translation failed for '$text': " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::warning('Translation failed', [
+                'text'    => $text,
+                'class'   => get_class($e),
+                'message' => $e->getMessage(),
+            ]);
             return $text;
         }
     }
+
     protected function checkSubscription(User $user): void
     {
         $subscription = $user->subscriptionPackage;
         Log::info('Subscription: ' . $subscription);
-        if (!$subscription || $subscription->subscription_end_date < now()) {
+        if (! $subscription || $subscription->subscription_end_date < now()) {
             throw new HttpResponseException(
                 json_custom_response([
                     'success' => false,
@@ -292,6 +342,4 @@ class FoodRecognitionService
             );
         }
     }
-
-
 }
