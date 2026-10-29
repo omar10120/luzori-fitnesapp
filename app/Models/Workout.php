@@ -16,12 +16,13 @@ class Workout extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
     use HasSlug;
 
-    protected $fillable = [ 'title', 'slug', 'description', 'status', 'workout_type_id', 'level_id', 'is_premium', 'visibility' ];
+    protected $fillable = [ 'user_id', 'title', 'slug', 'description', 'status', 'workout_type_id', 'level_id', 'is_premium', 'visibility' ];
 
     protected $casts = [
         'workout_type_id'   => 'integer',
         'level_id'          => 'integer',
         'is_premium'        => 'integer',
+        'user_id'           => 'integer',
     ];
 
     public function workouttype()
@@ -161,9 +162,12 @@ class Workout extends Model implements HasMedia
             if ($user) {
                 $q->orWhere(function ($q1) use ($user) {
                     $q1->where('visibility', 'private')
-                    ->whereHas('userAssignWorkout', fn ($q2) =>
-                        $q2->where('user_id', $user->id)
-                    );
+                        ->where(function ($q2) use ($user) {
+                            $q2->where('user_id', $user->id)
+                                ->orWhereHas('userAssignWorkout', fn ($q3) =>
+                                    $q3->where('user_id', $user->id)
+                                );
+                        });
                 });
             }
         });

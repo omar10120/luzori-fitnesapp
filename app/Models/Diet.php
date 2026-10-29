@@ -15,11 +15,12 @@ class Diet extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
     use HasSlug;
 
-    protected $fillable = [ 'title', 'slug', 'categorydiet_id', 'calories', 'carbs', 'protein', 'fat', 'servings', 'total_time', 'is_featured', 'status', 'ingredients', 'description', 'is_premium', 'visibility' ];
+    protected $fillable = [ 'user_id', 'title', 'slug', 'categorydiet_id', 'calories', 'carbs', 'protein', 'fat', 'servings', 'total_time', 'is_featured', 'status', 'ingredients', 'description', 'is_premium', 'visibility' ];
 
     protected $casts = [
         'is_premium'        => 'integer',
         'categorydiet_id'   => 'integer',
+        'user_id'           => 'integer',
     ];
 
     public function categorydiet()
@@ -134,9 +135,12 @@ class Diet extends Model implements HasMedia
             if ($user) {
                 $q->orWhere(function ($q1) use ($user) {
                     $q1->where('visibility', 'private')
-                    ->whereHas('userAssignDiet', fn ($q2) =>
-                        $q2->where('user_id', $user->id)
-                    );
+                        ->where(function ($q2) use ($user) {
+                            $q2->where('user_id', $user->id)
+                                ->orWhereHas('userAssignDiet', fn ($q3) =>
+                                    $q3->where('user_id', $user->id)
+                                );
+                        });
                 });
             }
         });

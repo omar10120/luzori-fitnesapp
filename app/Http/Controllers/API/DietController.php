@@ -12,12 +12,18 @@ use App\Http\Resources\CategoryDietResource;
 use App\Models\CategoryDiet;
 use App\Models\AssignDiet;
 use App\Http\Resources\AssignDietResource;
+use Illuminate\Support\Str;
 
 class DietController extends Controller
 {
     public function getList(Request $request)
     {
-        $diet = Diet::active()->showAssignPrivateDiet();
+        $diet = Diet::active()
+            ->where(function ($query) {
+                $query->whereNull('user_id')
+                    ->orWhere('user_id', auth()->id());
+            })
+            ->showAssignPrivateDiet();
 
         $diet->when(request('title'), function ($q) {
             return $q->where('title', 'LIKE', '%' . request('title') . '%');
@@ -81,6 +87,90 @@ class DietController extends Controller
              
         return json_custom_response($response);
         
+    }
+
+    public function storeCustomDiet(Request $request)
+    {
+        $validated = $request->validate($this->customDietRules());
+
+        $diet = Diet::create([
+            ...$validated,
+            'user_id' => auth()->id(),
+            'slug' => $this->uniqueDietSlug($validated['title']),
+            'status' => 'active',
+            'visibility' => 'private',
+        ]);
+
+        return json_custom_response([
+            'message' => __('message.save_form', ['form' => __('message.diet')]),
+            'data' => new DietDetailResource($diet),
+        ]);
+    }
+
+    public function updateCustomDiet(Request $request)
+    {
+        $validated = $request->validate([
+            'id' => ['required', 'integer'],
+            ...$this->customDietRules(true),
+        ]);
+
+        $diet = Diet::where('user_id', auth()->id())->find($validated['id']);
+        if (!$diet) {
+            return json_message_response(__('message.not_found_entry', ['name' => __('message.diet')]), 404);
+        }
+
+        unset($validated['id']);
+        $diet->update($validated);
+
+        return json_custom_response([
+            'message' => __('message.update_form', ['form' => __('message.diet')]),
+            'data' => new DietDetailResource($diet->fresh()),
+        ]);
+    }
+
+    public function destroyCustomDiet(Request $request)
+    {
+        $request->validate([
+            'id' => ['required', 'integer'],
+        ]);
+
+        $diet = Diet::where('user_id', auth()->id())->find($request->id);
+        if (!$diet) {
+            return json_message_response(__('message.not_found_entry', ['name' => __('message.diet')]), 404);
+        }
+
+        $diet->delete();
+
+        return json_message_response(__('message.delete_form', ['form' => __('message.diet')]));
+    }
+
+    private function customDietRules(bool $updating = false): array
+    {
+        $required = $updating ? 'sometimes' : 'required';
+
+        return [
+            'title' => [$required, 'string', 'max:255'],
+            'categorydiet_id' => [$required, 'integer', 'exists:category_diets,id'],
+            'calories' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'protein' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'carbs' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'fat' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'ingredients' => ['sometimes', 'nullable', 'string'],
+        ];
+    }
+
+    private function uniqueDietSlug(string $title): string
+    {
+        $slug = Str::slug($title);
+        $baseSlug = $slug !== '' ? $slug : 'diet';
+        $suffix = 1;
+
+        while (Diet::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $suffix++;
+        }
+
+        return $slug;
     }
 
     public function getUserFavouriteDiet(Request $request)

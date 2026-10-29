@@ -68,6 +68,13 @@ Route::get('get-macro-nutrient',[API\DashboardController::class,'getMacroNurtrie
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
+    Route::post('workout-save', [ API\WorkoutController::class, 'storeCustomWorkout' ]);
+    Route::post('workout-update', [ API\WorkoutController::class, 'updateCustomWorkout' ]);
+    Route::post('workout-delete', [ API\WorkoutController::class, 'destroyCustomWorkout' ]);
+    Route::post('diet-save', [ API\DietController::class, 'storeCustomDiet' ]);
+    Route::post('diet-update', [ API\DietController::class, 'updateCustomDiet' ]);
+    Route::post('diet-delete', [ API\DietController::class, 'destroyCustomDiet' ]);
+
     Route::get('program-list', [ API\ProgramController::class, 'getList' ]);
     Route::get('program-detail', [ API\ProgramController::class, 'getDetail' ]);
     Route::post('program-save', [ API\ProgramController::class, 'store' ]);
