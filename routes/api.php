@@ -68,6 +68,12 @@ Route::get('get-macro-nutrient',[API\DashboardController::class,'getMacroNurtrie
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
+    Route::get('program-list', [ API\ProgramController::class, 'getList' ]);
+    Route::get('program-detail', [ API\ProgramController::class, 'getDetail' ]);
+    Route::post('program-save', [ API\ProgramController::class, 'store' ]);
+    Route::post('program-update', [ API\ProgramController::class, 'update' ]);
+    Route::post('program-delete', [ API\ProgramController::class, 'destroy' ]);
+
     Route::post('update-profile', [ API\UserController::class, 'updateProfile']);
     Route::post('change-password', [ API\UserController::class, 'changePassword']);
     Route::post('update-user-status', [ API\UserController::class, 'updateUserStatus']);
