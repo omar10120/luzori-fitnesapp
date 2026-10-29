@@ -35,6 +35,11 @@ class Program extends Model
         return $this->hasMany(ProgramDay::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function diet()
     {
         return $this->belongsTo(Diet::class);

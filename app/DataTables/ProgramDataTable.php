@@ -24,11 +24,17 @@ class ProgramDataTable extends DataTable
             ->editColumn('price', function ($query) {
                 return $query->price !== null ? number_format((float) $query->price, 2) : '-';
             })
+            ->editColumn('user_id', function ($query) {
+                return optional($query->user)->display_name ?? '-';
+            })
             ->editColumn('diet.title', function ($query) {
                 return optional($query->diet)->title ?? '-';
             })
             ->editColumn('advice.name', function ($query) {
                 return optional($query->advice)->name ?? '-';
+            })
+            ->editColumn('is_recurring', function ($query) {
+                return $query->is_recurring ? __('message.yes') : __('message.no');
             })
             ->editColumn('status', function ($query) {
                 $checked = $query->status ? 'checked' : '';
@@ -76,7 +82,7 @@ class ProgramDataTable extends DataTable
      */
     public function query(Program $model)
     {
-        $model = Program::query()->with(['diet', 'advice']);
+        $model = Program::query()->with(['user:id,display_name', 'diet', 'advice']);
         return $this->applyScopes($model);
     }
 
@@ -106,7 +112,12 @@ class ProgramDataTable extends DataTable
                 ->searchable(false)
                 ->title(__('message.srno'))
                 ->orderable(false),
+            ['data' => 'user_id', 'name' => 'user.display_name', 'title' => __('message.user'), 'orderable' => false],
             ['data' => 'name', 'name' => 'name', 'title' => __('message.name')],
+            ['data' => 'objective', 'name' => 'objective', 'title' => __('message.objective')],
+            ['data' => 'duration_weeks', 'name' => 'duration_weeks', 'title' => __('message.duration_weeks')],
+            ['data' => 'is_recurring', 'name' => 'is_recurring', 'title' => __('message.is_recurring')],
+            ['data' => 'frequency', 'name' => 'frequency', 'title' => __('message.frequency')],
             ['data' => 'price', 'name' => 'price', 'title' => __('message.price')],
             ['data' => 'diet.title', 'name' => 'diet.title', 'title' => __('message.diet'), 'orderable' => false],
             ['data' => 'advice.name', 'name' => 'advice.name', 'title' => __('message.advice'), 'orderable' => false],
