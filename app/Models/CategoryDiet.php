@@ -16,7 +16,7 @@ class CategoryDiet extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
     use HasSlug;
 
-    protected $fillable = [ 'title', 'slug', 'status' ];
+    protected $fillable = [ 'user_id', 'title', 'slug', 'status' ];
 
     public function getSlugOptions() : SlugOptions
     {

@@ -68,6 +68,21 @@ Route::get('get-macro-nutrient',[API\DashboardController::class,'getMacroNurtrie
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
+    Route::get('user-categorydiet-list', [ API\CategoryDietController::class, 'getUserList' ]);
+    Route::post('categorydiet-save', [ API\CategoryDietController::class, 'storeCustom' ]);
+    Route::post('categorydiet-update', [ API\CategoryDietController::class, 'updateCustom' ]);
+    Route::post('categorydiet-delete', [ API\CategoryDietController::class, 'destroyCustom' ]);
+    
+    Route::get('user-level-list', [ API\LevelController::class, 'getUserList' ]);
+    Route::post('level-save', [ API\LevelController::class, 'storeCustom' ]);
+    Route::post('level-update', [ API\LevelController::class, 'updateCustom' ]);
+    Route::post('level-delete', [ API\LevelController::class, 'destroyCustom' ]);
+
+    Route::get('user-workouttype-list', [ API\WorkoutTypeController::class, 'getUserList' ]);
+    Route::post('workouttype-save', [ API\WorkoutTypeController::class, 'storeCustom' ]);
+    Route::post('workouttype-update', [ API\WorkoutTypeController::class, 'updateCustom' ]);
+    Route::post('workouttype-delete', [ API\WorkoutTypeController::class, 'destroyCustom' ]);
+
     Route::post('workout-save', [ API\WorkoutController::class, 'storeCustomWorkout' ]);
     Route::post('workout-update', [ API\WorkoutController::class, 'updateCustomWorkout' ]);
     Route::post('workout-delete', [ API\WorkoutController::class, 'destroyCustomWorkout' ]);

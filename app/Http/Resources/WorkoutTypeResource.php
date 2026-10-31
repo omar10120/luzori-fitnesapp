@@ -17,6 +17,7 @@ class WorkoutTypeResource extends JsonResource
         return [
             'id'            => $this->id,
             'title'         => $this->title,
+            'rate'          => $this->rate,
             'status'        => $this->status,
             'created_at'    => $this->created_at,
             'updated_at'    => $this->updated_at,

@@ -15,10 +15,11 @@ class Level extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
     use HasSlug;
 
-    protected $fillable = [ 'title','slug','rate','status' ];
+    protected $fillable = [ 'user_id', 'title','slug','rate','status' ];
 
     protected $casts = [
         'rate'      => 'integer',
+        'user_id'   => 'integer',
     ];
 
     public function getSlugOptions() : SlugOptions
