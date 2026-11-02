@@ -217,8 +217,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('get-favourite-recipe', [ API\RecipeController::class, 'getUserFavouriteRecipe' ]);
     Route::post('set-favourite-recipe', [ API\RecipeController::class, 'saveUserFavouriteRecipe' ]);
 
-});
+    Route::post('ai-workout/start', [ API\AIFitnessController::class, 'startWorkout' ]);
+    Route::post('ai-workout/stop', [ API\AIFitnessController::class, 'stopWorkout' ]);
 
+});
+Route::get('laravel/exercise-config/{exercise}', [ API\AIFitnessController::class, 'getExerciseConfig' ]);
 Route::get('recipetag-list', [ API\RecipeTagController::class, 'getList' ]);
 Route::get('recipecategory-list', [ API\RecipeCategoryController::class, 'getList' ]);
 
