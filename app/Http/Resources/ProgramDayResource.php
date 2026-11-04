@@ -25,7 +25,7 @@ class ProgramDayResource extends JsonResource
                 return [
                     'id' => $this->workout->id, 
                     'title' => $this->workout->title,
-                    // Add any other fields the app needs (e.g., image, level_id)
+                    
                 ];
             }),
             'diet' => $this->whenLoaded('diet', function() {
@@ -33,7 +33,7 @@ class ProgramDayResource extends JsonResource
                     'id' => $this->diet->id, 
                     'title' => $this->diet->title,
                     'calories' => $this->diet->calories,
-                    // Add any other fields the app needs (e.g., protein, fat, carbs)
+                    
                 ];
             }),
             
