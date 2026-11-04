@@ -13,6 +13,7 @@ class Program extends Model
         'duration_weeks',
         'is_recurring',
         'frequency',
+        'start_date',
         'price',
         'diet_id',
         'advice_id',
@@ -28,6 +29,7 @@ class Program extends Model
         'user_id' => 'integer',
         'duration_weeks' => 'integer',
         'is_recurring' => 'boolean',
+        'start_date' => 'date',
     ];
 
     public function days()

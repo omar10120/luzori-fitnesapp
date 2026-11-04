@@ -92,6 +92,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::get('program-list', [ API\ProgramController::class, 'getList' ]);
     Route::get('program-detail', [ API\ProgramController::class, 'getDetail' ]);
+    Route::get('program-day-detail', [ API\ProgramController::class, 'getDayDetail' ]);
     Route::post('program-save', [ API\ProgramController::class, 'store' ]);
     Route::post('program-update', [ API\ProgramController::class, 'update' ]);
     Route::post('program-delete', [ API\ProgramController::class, 'destroy' ]);

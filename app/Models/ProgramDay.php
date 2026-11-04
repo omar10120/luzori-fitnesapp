@@ -32,4 +32,15 @@ class ProgramDay extends Model
     {
         return $this->belongsTo(Program::class);
     }
+    // ADD THIS
+    public function workout()
+    {
+        return $this->belongsTo(Workout::class);
+    }
+
+    // ADD THIS
+    public function diet()
+    {
+        return $this->belongsTo(Diet::class);
+    }
 }

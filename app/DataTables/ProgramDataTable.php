@@ -48,6 +48,9 @@ class ProgramDataTable extends DataTable
             ->editColumn('created_at', function ($query) {
                 return dateAgoFormate($query->created_at, true);
             })
+            ->editColumn('start_date', function ($query) {
+                return $query->start_date ? $query->start_date->format('Y-m-d') : '-';
+            })
             ->editColumn('updated_at', function ($query) {
                 return dateAgoFormate($query->updated_at, true);
             })
@@ -118,6 +121,7 @@ class ProgramDataTable extends DataTable
             ['data' => 'duration_weeks', 'name' => 'duration_weeks', 'title' => __('message.duration_weeks')],
             ['data' => 'is_recurring', 'name' => 'is_recurring', 'title' => __('message.is_recurring')],
             ['data' => 'frequency', 'name' => 'frequency', 'title' => __('message.frequency')],
+            ['data' => 'start_date', 'name' => 'start_date', 'title' => __('message.start_date')],
             ['data' => 'price', 'name' => 'price', 'title' => __('message.price')],
             ['data' => 'diet.title', 'name' => 'diet.title', 'title' => __('message.diet'), 'orderable' => false],
             ['data' => 'advice.name', 'name' => 'advice.name', 'title' => __('message.advice'), 'orderable' => false],

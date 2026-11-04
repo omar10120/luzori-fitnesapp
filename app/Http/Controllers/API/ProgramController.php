@@ -133,6 +133,7 @@ class ProgramController extends Controller
             'duration_weeks' => ['sometimes', 'integer', 'min:1'],
             'is_recurring' => ['sometimes', 'boolean'],
             'frequency' => ['sometimes', 'in:daily,weekly,custom'],
+            'start_date' => ['sometimes', 'date'],
             'days' => [$updating ? 'sometimes' : 'required', 'array'],
             'days.*' => ['array:week_number,day_of_week,specific_date,type,workout_id,diet_id,water_goal_ml,steps_goal'],
             'days.*.week_number' => ['nullable', 'integer', 'min:1'],
@@ -144,5 +145,55 @@ class ProgramController extends Controller
             'days.*.water_goal_ml' => ['nullable', 'integer', 'min:0'],
             'days.*.steps_goal' => ['nullable', 'integer', 'min:0'],
         ];
+    }
+    public function getDayDetail(Request $request)
+    {
+        $request->validate([
+            'program_id' => ['required', 'integer', 'exists:programs,id'],
+            'date' => ['required', 'date_format:Y-m-d'],
+        ]);
+
+        $program = Program::where('user_id', auth()->id())->find($request->program_id);
+        if (!$program) {
+            return json_message_response(__('message.not_found_entry', ['name' => __('message.program')]), 404);
+        }
+
+        $targetDate = \Carbon\Carbon::parse($request->date);
+        
+        // 1. Calculate the Week Number
+        // If the program has a start date, calculate the difference in weeks. 
+        // Otherwise, assume it's Week 1.
+        $weekNumber = 1;
+        if ($program->start_date) {
+            $startDate = \Carbon\Carbon::parse($program->start_date);
+            if ($targetDate->greaterThanOrEqualTo($startDate)) {
+                $weekNumber = floor($startDate->diffInDays($targetDate) / 7) + 1;
+            }
+        }
+
+        // 2. Find the specific day
+        $query = $program->days();
+
+        if ($program->is_recurring) {
+            // For weekly recurring (1 = Monday, 7 = Sunday)
+            $query->where('week_number', $weekNumber)
+                  ->where('day_of_week', $targetDate->dayOfWeekIso);
+        } else {
+            // For custom non-recurring dates
+            $query->where('specific_date', $request->date);
+        }
+
+        $programDay = $query->first();
+
+        if (!$programDay) {
+            return json_custom_response([
+                'message' => 'No scheduled activity for this day.',
+                'data' => null
+            ]);
+        }
+
+        return json_custom_response([
+            'data' => new \App\Http\Resources\ProgramDayResource($programDay->load(['workout', 'diet'])),
+        ]);
     }
 }

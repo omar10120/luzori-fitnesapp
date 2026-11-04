@@ -16,6 +16,7 @@ class ProgramResource extends JsonResource
             'duration_weeks' => $this->duration_weeks,
             'is_recurring' => $this->is_recurring,
             'frequency' => $this->frequency,
+            'start_date' => $this->start_date,
             'status' => $this->status,
             'days' => ProgramDayResource::collection($this->whenLoaded('days')),
             'created_at' => $this->created_at,
