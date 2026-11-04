@@ -20,20 +20,27 @@ class ProgramDayResource extends JsonResource
             'water_goal_ml' => $this->water_goal_ml,
             'steps_goal' => $this->steps_goal,
             
-            // ADD THESE BLOCKS:
             'workout' => $this->whenLoaded('workout', function() {
                 return [
                     'id' => $this->workout->id, 
                     'title' => $this->workout->title,
+                    'description' => $this->workout->description,
+                    'level_id' => $this->workout->level_id,
+                    'workout_type_id' => $this->workout->workout_type_id,
                     
+                    // This uses your existing WorkoutDayResource to return the exercises perfectly!
+                    'days' => \App\Http\Resources\WorkoutDayResource::collection($this->workout->workoutDay),
                 ];
             }),
+
             'diet' => $this->whenLoaded('diet', function() {
                 return [
                     'id' => $this->diet->id, 
                     'title' => $this->diet->title,
                     'calories' => $this->diet->calories,
-                    
+                    'protein' => $this->diet->protein,
+                    'carbs' => $this->diet->carbs,
+                    'fat' => $this->diet->fat,
                 ];
             }),
             

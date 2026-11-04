@@ -192,8 +192,14 @@ class ProgramController extends Controller
             ]);
         }
 
-        return json_custom_response([
-            'data' => new \App\Http\Resources\ProgramDayResource($programDay->load(['workout', 'diet'])),
+       return json_custom_response([
+            'data' => new \App\Http\Resources\ProgramDayResource(
+                $programDay->load([
+                    'workout.workoutDay.workoutDayExercise.exercise', 
+                    'diet'
+                ])
+            ),
         ]);
+
     }
 }

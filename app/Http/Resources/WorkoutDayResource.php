@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\WorkoutDayExerciseResource;
 
 class WorkoutDayResource extends JsonResource
 {
@@ -21,6 +22,9 @@ class WorkoutDayResource extends JsonResource
             'workout_title' => optional($this->workout)->title,
             'is_rest'       => $this->is_rest,
             'sequence'      => $this->sequence,
+            
+            'exercises'     => WorkoutDayExerciseResource::collection($this->whenLoaded('workoutDayExercise')),
+            
             'created_at'    => $this->created_at,
             'updated_at'    => $this->updated_at,
         ];
