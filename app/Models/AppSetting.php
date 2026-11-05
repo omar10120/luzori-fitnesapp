@@ -15,11 +15,6 @@ class AppSetting extends Model implements HasMedia
 
 	public $timestamps = false;
 
-    // ADD THIS BLOCK
-    protected $casts = [
-        'is_apple' => 'boolean',
-    ];
-
 	protected static function getData()
     {
 		$data =	self::get()->first();
