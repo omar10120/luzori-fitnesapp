@@ -261,14 +261,135 @@
             });
         }
 
-        // Add new block
-        $('#add-exercise-btn').on('click', function() {
+             // --- UPDATED: Reusable function to add a block (handles both empty and populated) ---
+        function addExerciseBlock(data = null) {
             let num = exerciseIndex + 1;
             let html = exerciseTemplate.replace(/__INDEX__/g, exerciseIndex).replace(/__NUM__/g, num);
             let $block = $(html);
             $('#exercises-container').append($block);
+            
+            // If data is passed (Cloning), populate the fields
+            if (data) {
+                $block.find('.exercise-select').val(data.exercise_id);
+                
+                // Show override section immediately
+                $block.find('.exercise-override-section').removeClass('d-none');
+                
+                // Main fields
+                $block.find('.pe_title').val(data.pe_title);
+                $block.find('.pe_video_type').val(data.pe_video_type).trigger('change');
+                $block.find('.pe_video_url').val(data.pe_video_url);
+                $block.find('.pe_status').val(data.pe_status);
+                $block.find('.pe_is_premium').prop('checked', data.pe_is_premium == 1);
+                $block.find('.pe_type').val(data.pe_type);
+                $block.find('.pe_based[value="'+data.pe_based+'"]').prop('checked', true).trigger('change');
+                $block.find('.pe_seconds_per_rep').val(data.pe_seconds_per_rep);
+                
+                // Tabs
+                if (data.pe_type === 'duration') {
+                    $block.find('.nav-pills a[href="#duration_' + exerciseIndex + '"]').tab('show');
+                } else {
+                    $block.find('.nav-pills a[href="#sets_' + exerciseIndex + '"]').tab('show');
+                }
+                
+                // Duration Fields
+                $block.find('.pe_hours').val(data.pe_hours);
+                $block.find('.pe_minute').val(data.pe_minute);
+                $block.find('.pe_second').val(data.pe_second);
+                
+                // Sets Table
+                let tbody = $block.find('.sets-table tbody');
+                if (data.pe_reps && data.pe_reps.length > 0) {
+                    data.pe_reps.forEach(function(rep, i) {
+                        let rowHtml = `
+                            <tr>
+                                <td><input type="number" name="exercises[${exerciseIndex}][pe_reps][]" value="${rep}" class="form-control form-control-sm"></td>
+                                <td><input type="number" name="exercises[${exerciseIndex}][pe_time][]" value="${data.pe_time[i] || ''}" class="form-control form-control-sm"></td>
+                                <td><input type="number" name="exercises[${exerciseIndex}][pe_weight][]" value="${data.pe_weight[i] || ''}" class="form-control form-control-sm"></td>
+                                <td><input type="number" name="exercises[${exerciseIndex}][pe_rest][]" value="${data.pe_rest[i] || ''}" class="form-control form-control-sm"></td>
+                                <td><button type="button" class="btn btn-sm btn-danger remove-set">X</button></td>
+                            </tr>
+                        `;
+                        tbody.append(rowHtml);
+                    });
+                }
+            }
+            
+            // Initialize Select2 and other events ONLY AFTER values are set
             initBlock($block);
+
+            // If data is passed, manually trigger Select2 update to prevent AJAX override
+            if (data) {
+                $block.find('.exercise-select').trigger('change.select2');
+                
+                // TinyMCE Content
+                setTimeout(() => {
+                    if (tinymce.get($block.find('.tinymce-instruction').attr('id'))) {
+                        tinymce.get($block.find('.tinymce-instruction').attr('id')).setContent(data.pe_instruction || '');
+                    }
+                    if (tinymce.get($block.find('.tinymce-tips').attr('id'))) {
+                        tinymce.get($block.find('.tinymce-tips').attr('id')).setContent(data.pe_tips || '');
+                    }
+                }, 100);
+            }
+
             exerciseIndex++;
+        }
+
+        // Add empty block on button click
+        $('#add-exercise-btn').on('click', function() {
+            addExerciseBlock();
+        });
+
+        // --- NEW: CLONE PACKAGE LOGIC ---
+        $('#clone-package-select').on('change', function() {
+            let packageId = $(this).val();
+            if (!packageId) return;
+
+            if (confirm('This will overwrite current form data. Continue?')) {
+                // We use a placeholder and replace it to avoid blade parse errors if the route has params
+                let cloneDataUrl = "{{ isset($id) ? '#' : route('package.full-data', ':id') }}".replace(':id', packageId);
+                
+                $.get(cloneDataUrl, function(res) {
+                    // 1. Populate Main Fields
+                    $('input[name="name"]').val(res.package.name + ' (Copy)');
+                    $('select[name="duration_unit"]').val(res.package.duration_unit).trigger('change');
+                    $('select[name="duration"]').val(res.package.duration).trigger('change');
+                    $('input[name="price"]').val(res.package.price);
+                    $('input[name="follow_up_price"]').val(res.package.follow_up_price);
+                    $('input[name="food_recognition_limit"]').val(res.package.food_recognition_limit);
+                    $('select[name="status"]').val(res.package.status).trigger('change');
+                    $('select[name="diet_id"]').val(res.package.diet_id).trigger('change');
+                    $('select[name="advice_id"]').val(res.package.advice_id).trigger('change');
+                    
+                    if (tinymce.get('description')) {
+                        tinymce.get('description').setContent(res.package.description || '');
+                    } else {
+                        $('textarea[name="description"]').val(res.package.description);
+                    }
+
+                    // 2. Clear Existing Exercises safely (Destroying TinyMCE first)
+                    $('.exercise-block').each(function() {
+                        $(this).find('textarea').each(function() { tinymce.remove(this); });
+                        $(this).remove();
+                    });
+                    exerciseIndex = 0; // Reset index
+
+                    // 3. Add new exercises from cloned package
+                    if (res.exercises && res.exercises.length > 0) {
+                        res.exercises.forEach(function(ex) {
+                            addExerciseBlock(ex);
+                        });
+                    } else {
+                        addExerciseBlock(); // add one empty if original had none
+                    }
+                    
+                    // Reset dropdown
+                    $('#clone-package-select').val(null).trigger('change');
+                });
+            } else {
+                $(this).val(null).trigger('change');
+            }
         });
 
         // Remove block
@@ -289,10 +410,11 @@
         });
 
         // Trigger add button if empty on create
-        if ($('#exercises-container').children().length === 0) {
-            $('#add-exercise-btn').trigger('click');
+        if ($('#exercises-container').children().length === 0 && !{{ isset($id) ? 'true' : 'false' }}) {
+            addExerciseBlock();
         }
     })(jQuery);
+
 </script>
 @endpush
 
@@ -318,6 +440,25 @@
 
                     <div class="card-body">
                         <!-- MAIN PACKAGE FIELDS -->
+                         @if(!isset($id))
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="alert alert-light d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <strong><i class="fas fa-copy"></i> Quick Add:</strong> Copy an existing package to use as a template.
+                                    </div>
+                                    <div style="width: 300px;">
+                                        <select id="clone-package-select" class="form-control select2js">
+                                            <option value="">-- Select a Package to Clone --</option>
+                                            @foreach($existingPackages as $pkgId => $pkgName)
+                                                <option value="{{ $pkgId }}">{{ $pkgName }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                         <div class="row">
                             <div class="form-group col-md-4">
                                 {{ html()->label(__('message.name') . ' <span class="text-danger">*</span>', 'name')->class('form-control-label') }}

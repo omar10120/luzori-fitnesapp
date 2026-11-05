@@ -42,8 +42,10 @@ class PackageController extends Controller
         $advices = Advice::where('status', 1)->orderBy('name')->pluck('name', 'id');
         $exercises = Exercise::where('status', 'active')->orderBy('title')->pluck('title', 'id');
         $users = User::where('status', 'active')->orderBy('username')->pluck('username', 'id');
+        $existingPackages = Package::orderBy('name')->pluck('name', 'id'); 
 
-        return view('package.form', compact('pageTitle', 'diets', 'advices', 'exercises', 'users'));
+            return view('package.form', compact('pageTitle', 'diets', 'advices', 'exercises', 'users', 'existingPackages'));
+
     }
 
     public function store(PackageRequest $request)
@@ -384,6 +386,41 @@ class PackageController extends Controller
             ];
         }
         return $sets;
+    }
+
+    public function getPackageFullData($id)
+    {
+        $package = Package::with('packageExercises')->findOrFail($id);
+        
+        // Format the exercises exactly how the JS expects them
+        $exercises = $package->packageExercises->map(function($pe) {
+            $duration = $pe->duration ? explode(':', $pe->duration) : [null, null, null];
+            return [
+                'exercise_id' => $pe->exercise_id,
+                'pe_title' => $pe->title,
+                'pe_instruction' => $pe->instruction,
+                'pe_tips' => $pe->tips,
+                'pe_video_type' => $pe->video_type,
+                'pe_video_url' => $pe->video_url,
+                'pe_status' => $pe->status,
+                'pe_is_premium' => $pe->is_premium,
+                'pe_type' => $pe->type,
+                'pe_based' => $pe->based,
+                'pe_seconds_per_rep' => $pe->seconds_per_rep,
+                'pe_hours' => $duration[0],
+                'pe_minute' => $duration[1],
+                'pe_second' => $duration[2],
+                'pe_reps' => collect($pe->sets ?? [])->pluck('reps')->toArray(),
+                'pe_time' => collect($pe->sets ?? [])->pluck('time')->toArray(),
+                'pe_weight' => collect($pe->sets ?? [])->pluck('weight')->toArray(),
+                'pe_rest' => collect($pe->sets ?? [])->pluck('rest')->toArray(),
+            ];
+        });
+
+        return response()->json([
+            'package' => $package->only(['name', 'duration_unit', 'duration', 'price', 'description', 'status', 'diet_id', 'advice_id', 'follow_up_price', 'food_recognition_limit']),
+            'exercises' => $exercises
+        ]);
     }
 }
 

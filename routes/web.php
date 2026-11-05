@@ -176,6 +176,7 @@ Route::group(['middleware' => [ 'auth', 'useractive' ]], function () {
 
     Route::resource('package',PackageController::class);
     Route::get('package-exercise-data/{id}', [PackageController::class, 'getExerciseData'])->name('package.exercise.data');
+    Route::get('admin/package-full-data/{id}', [PackageController::class, 'getPackageFullData'])->name('package.full-data');
 
     Route::post('remove-file',[ HomeController::class, 'removeFile' ])->name('remove.file');
 
