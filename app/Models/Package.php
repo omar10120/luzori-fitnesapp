@@ -59,6 +59,10 @@ class Package extends Model
     {
         return $this->packageExercise ?? $this->originalExercise;
     }
+    public function packageExercises()
+    {
+        return $this->hasMany(PackageExercise::class);
+    }
     /**
      * Packages with no assigned users are public.
      * Packages with assigned users are visible only to those users.

@@ -1,252 +1,309 @@
 @php
     $id = $id ?? null;
-    $packageExercise = $packageExercise ?? (isset($data) ? ($data->packageExercise ?? null) : null);
-    $peType = old('pe_type', isset($packageExercise) && $packageExercise->type != null ? $packageExercise->type : 'sets');
-    $peBased = old('pe_based', isset($packageExercise) && $packageExercise->based != null ? $packageExercise->based : 'reps');
+    $selectedUsers = old('users', isset($data) ? $data->users()->pluck('users.id')->toArray() : []);
+    
+    // Check if we have existing exercises (Edit mode) or old input (Validation error)
+    $existingExercises = old('exercises');
+    if ($existingExercises === null && isset($data)) {
+        $packageExercises = $data->packageExercises ?? collect(); 
+
+        $existingExercises = $data->packageExercises->map(function($pe) {
+            $duration = $pe->duration ? explode(':', $pe->duration) : [null, null, null];
+            return [
+                'exercise_id' => $pe->exercise_id,
+                'pe_title' => $pe->title,
+                'pe_instruction' => $pe->instruction,
+                'pe_tips' => $pe->tips,
+                'pe_video_type' => $pe->video_type,
+                'pe_video_url' => $pe->video_url,
+                'pe_status' => $pe->status,
+                'pe_is_premium' => $pe->is_premium,
+                'pe_type' => $pe->type,
+                'pe_based' => $pe->based,
+                'pe_seconds_per_rep' => $pe->seconds_per_rep,
+                'pe_hours' => $duration[0],
+                'pe_minute' => $duration[1],
+                'pe_second' => $duration[2],
+                'pe_reps' => collect($pe->sets ?? [])->pluck('reps')->toArray(),
+                'pe_time' => collect($pe->sets ?? [])->pluck('time')->toArray(),
+                'pe_weight' => collect($pe->sets ?? [])->pluck('weight')->toArray(),
+                'pe_rest' => collect($pe->sets ?? [])->pluck('rest')->toArray(),
+            ];
+        })->toArray();
+    }
+    if ($existingExercises === null) {
+        $existingExercises = []; // Empty on create
+    }
 @endphp
+
 @push('scripts')
-    <script>
-        (function($) {
-            $(document).ready(function(){
-                tinymceEditor('.tinymce-description',' ',function (ed) {
-                }, 450)
+<script>
+    (function($) {
+        let exerciseIndex = {{ count($existingExercises) }};
+        const exerciseDataUrl = @json(url('admin/package-exercise-data'));
 
-                if ($('.tinymce-pe-instruction').length) {
-                    tinymceEditor('.tinymce-pe-instruction',' ',function (ed) {}, 450)
+        // Template for a new exercise block
+        const exerciseTemplate = `
+            <div class="exercise-block border p-3 mb-3 bg-light rounded" data-index="__INDEX__">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0 text-primary">Exercise #__NUM__</h5>
+                    <button type="button" class="btn btn-sm btn-danger remove-exercise">Remove</button>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label class="form-control-label">Select Exercise <span class="text-danger">*</span></label>
+                        <select name="exercises[__INDEX__][exercise_id]" class="form-control select2js exercise-select" required>
+                            <option value="">Select</option>
+                            @foreach($exercises as $exId => $exTitle)
+                                <option value="{{ $exId }}">{{ $exTitle }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="exercise-override-section d-none mt-3">
+                    <div class="row">
+                        <div class="form-group col-md-4">
+                            <label class="form-control-label">Title Override</label>
+                            <input type="text" name="exercises[__INDEX__][pe_title]" class="form-control pe_title" placeholder="Title">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label class="form-control-label">Video Type</label>
+                            <select name="exercises[__INDEX__][pe_video_type]" class="form-control pe_video_type">
+                                <option value="url">URL</option>
+                                <option value="upload_video">Upload Video</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4 pe-video-url">
+                            <label class="form-control-label">Video URL</label>
+                            <input type="text" name="exercises[__INDEX__][pe_video_url]" class="form-control pe_video_url" placeholder="Video URL">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label class="form-control-label">Status</label>
+                            <select name="exercises[__INDEX__][pe_status]" class="form-control pe_status">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label class="form-control-label d-block">Is Premium</label>
+                            <div class="form-check form-switch mt-2">
+                                <input type="hidden" name="exercises[__INDEX__][pe_is_premium]" value="0">
+                                <input type="checkbox" name="exercises[__INDEX__][pe_is_premium]" value="1" class="form-check-input pe_is_premium">
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-pills nav-fill mb-3 exercise-tab" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#sets___INDEX__" data-type="sets">Sets</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#duration___INDEX__" data-type="duration">Duration</a></li>
+                    </ul>
+                    <input type="hidden" name="exercises[__INDEX__][pe_type]" class="pe_type" value="sets">
+
+                    <div class="tab-content">
+                        <!-- Sets Tab -->
+                        <div id="sets___INDEX__" class="tab-pane fade show active">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input type="radio" name="exercises[__INDEX__][pe_based]" value="reps" class="form-check-input pe_based" checked>
+                                        <label class="form-check-label">Reps</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" name="exercises[__INDEX__][pe_based]" value="time" class="form-check-input pe_based">
+                                        <label class="form-check-label">Time</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 pe-reps-time-row">
+                                    <input type="number" name="exercises[__INDEX__][pe_seconds_per_rep]" class="form-control pe_seconds_per_rep" placeholder="Seconds per rep">
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button type="button" class="btn btn-sm btn-primary add-set-btn">Add Set</button>
+                                </div>
+                            </div>
+                            <table class="table table-sm mt-2 sets-table">
+                                <thead>
+                                    <tr>
+                                        <th>Reps</th>
+                                        <th>Time</th>
+                                        <th>Weight</th>
+                                        <th>Rest</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Duration Tab -->
+                        <div id="duration___INDEX__" class="tab-pane fade">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <input type="number" name="exercises[__INDEX__][pe_hours]" class="form-control pe_hours" placeholder="Hours">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="number" name="exercises[__INDEX__][pe_minute]" class="form-control pe_minute" placeholder="Minutes">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="number" name="exercises[__INDEX__][pe_second]" class="form-control pe_second" placeholder="Seconds">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-control-label">Instruction</label>
+                            <textarea name="exercises[__INDEX__][pe_instruction]" class="form-control tinymce-instruction"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-control-label">Tips</label>
+                            <textarea name="exercises[__INDEX__][pe_tips]" class="form-control tinymce-tips"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Init block function
+        function initBlock($block) {
+            const index = $block.data('index');
+            
+            // Init TinyMCE
+            tinymce.init({
+                selector: '.tinymce-instruction, .tinymce-tips',
+                height: 150,
+                menubar: false,
+                plugins: 'lists link',
+                toolbar: 'undo redo | bold italic | alignleft aligncenter alignright | bullist numlist'
+            });
+
+            // Init Select2
+            $block.find('.select2js').select2({ theme: 'bootstrap-5' });
+
+            // Set Tab change
+            $block.find('.exercise-tab a').on('show.bs.tab', function(e) {
+                $block.find('.pe_type').val($(e.target).data('type'));
+            });
+
+            // Video Type toggle
+            $block.find('.pe_video_type').on('change', function() {
+                if ($(this).val() === 'url') {
+                    $block.find('.pe-video-url').show();
+                } else {
+                    $block.find('.pe-video-url').hide();
                 }
-                if ($('.tinymce-pe-tips').length) {
-                    tinymceEditor('.tinymce-pe-tips',' ',function (ed) {}, 450)
+            });
+
+            // Based toggle
+            $block.find('.pe_based').on('change', function() {
+                if ($(this).val() === 'time') {
+                    $block.find('.pe-reps-time-row').hide();
+                } else {
+                    $block.find('.pe-reps-time-row').show();
+                }
+            });
+
+            // Add Set Row
+            $block.find('.add-set-btn').on('click', function() {
+                let rowHtml = `
+                    <tr>
+                        <td><input type="number" name="exercises[${index}][pe_reps][]" class="form-control form-control-sm" min="0"></td>
+                        <td><input type="number" name="exercises[${index}][pe_time][]" class="form-control form-control-sm" min="0"></td>
+                        <td><input type="number" name="exercises[${index}][pe_weight][]" class="form-control form-control-sm" min="0"></td>
+                        <td><input type="number" name="exercises[${index}][pe_rest][]" class="form-control form-control-sm" min="0"></td>
+                        <td><button type="button" class="btn btn-sm btn-danger remove-set">X</button></td>
+                    </tr>
+                `;
+                $block.find('.sets-table tbody').append(rowHtml);
+            });
+
+            // Remove Set Row
+            $block.on('click', '.remove-set', function() {
+                $(this).closest('tr').remove();
+            });
+
+            // Fetch Exercise Data on select
+            $block.find('.exercise-select').on('change', function() {
+                let exId = $(this).val();
+                if (!exId) {
+                    $block.find('.exercise-override-section').addClass('d-none');
+                    return;
                 }
 
-                var videoType = $('select[name=pe_video_type]').val();
-                togglePeVideoFields(videoType);
-
-                $('select[name=pe_video_type]').on('change', function () {
-                    togglePeVideoFields(this.value);
-                });
-
-                function togglePeVideoFields(type) {
-                    if (type === 'url') {
-                        $('.pe-video-url').removeClass('d-none');
-                    } else {
-                        $('.pe-video-url').addClass('d-none');
-                    }
-                }
-
-                var row = 0;
-                $('#pe_add_button').on('click', function () {
-                    var tableBody = $('#pe_table_list').find('tbody');
-                    var trLast = tableBody.find('tr:last');
-                    var trNew = trLast.clone();
-                    row = parseInt(trNew.attr('row') || 0, 10);
-                    row++;
-
-                    trNew.attr('id', 'pe_row_' + row).attr('data-id', 0).attr('row', row);
-                    trNew.find('input').val('');
-                    trNew.find('[id^="pe_remove_"]').attr('id', 'pe_remove_' + row).attr('row', row);
-
-                    trLast.after(trNew);
-                });
-
-                $(document).on('click', '.pe-removebtn', function () {
-                    var rowId = $(this).attr('row');
-                    var deleteRow = $('#pe_row_' + rowId);
-                    var totalRow = $('#pe_table_list tbody tr').length;
-                    var userResponse = confirm("{{ __('message.delete_msg') }}");
-                    if (!userResponse) {
-                        return false;
-                    }
-
-                    if (totalRow == 1) {
-                        $(document).find('#pe_add_button').trigger('click');
-                    }
-                    deleteRow.remove();
-                });
-
-                var peType = @json($peType);
-                changePeTabValue(peType);
-
-                if (peType == 'sets') {
-                    var peBased = @json($peBased);
-                    togglePeBasedColumns(peBased);
-                }
-
-                $('#pe-exercise-pills-tab').on('show.bs.tab', function (e) {
-                    changePeTabValue($(e.target).attr('data-type'));
-                });
-
-                $(document).on('change', 'input[name="pe_based"]', function () {
-                    togglePeBasedColumns($(this).val());
-                });
-
-                function changePeTabValue(type) {
-                    $('input[name=pe_type]').val(type);
-                }
-
-                function togglePeBasedColumns(based) {
-                    if (based === 'time') {
-                        $('.pe-reps-time-row').addClass('d-none');
-                    } else {
-                        $('.pe-reps-time-row').removeClass('d-none');
-                    }
-                }
-
-                $(document).on('click', '#pe_sets_clear', function () {
-                    $('#pe_table_list tbody').find('input').val('');
-                });
-
-                $(document).on('click', '#pe_duration_clear', function () {
-                    $('#pe_hours').val(null).trigger('change');
-                    $('#pe_minute').val(null).trigger('change');
-                    $('#pe_second').val(null).trigger('change');
-                });
-
-                var exerciseDataUrl = @json(url('admin/package-exercise-data'));
-
-                function setTinyContent(selector, content) {
-                    var el = document.querySelector(selector);
-                    if (!el) {
-                        return;
-                    }
-                    if (typeof tinymce !== 'undefined' && tinymce.get(el.id)) {
-                        tinymce.get(el.id).setContent(content || '');
-                    } else {
-                        $(selector).val(content || '');
-                    }
-                }
-
-                function setSelectValue($el, value) {
-                    if (!$el.length) {
-                        return;
-                    }
-                    if (value === null || value === undefined || value === '') {
-                        $el.val(null).trigger('change');
-                        return;
-                    }
-                    if ($el.find('option[value="' + value + '"]').length === 0) {
-                        $el.append(new Option(value, value, true, true));
-                    }
-                    $el.val(String(value)).trigger('change');
-                }
-
-                function renderPeSets(sets) {
-                    var $tbody = $('#pe_table_list tbody');
-                    $tbody.empty();
-
-                    if (!sets || !sets.length) {
-                        sets = [{ reps: '', time: '', weight: '', rest: '' }];
-                    }
-
-                    sets.forEach(function (field, key) {
-                        var rowHtml =
-                            '<tr id="pe_row_' + key + '" row="' + key + '" data-id="' + key + '">' +
-                                '<td><div class="form-group"><input type="number" name="pe_reps[]" value="' + (field.reps ?? '') + '" placeholder="{{ __('message.reps') }}" class="form-control" min="0"></div></td>' +
-                                '<td><div class="form-group"><input type="number" name="pe_time[]" value="' + (field.time ?? '') + '" placeholder="{{ __('message.time') }}" class="form-control" min="0"></div></td>' +
-                                '<td class="weight"><div class="form-group"><input type="number" name="pe_weight[]" value="' + (field.weight ?? '') + '" placeholder="{{ __('message.weight') }}" class="form-control" min="0"></div></td>' +
-                                '<td><div class="form-group"><input type="number" name="pe_rest[]" value="' + (field.rest ?? '') + '" placeholder="{{ __('message.rest') }}" class="form-control" min="0"></div></td>' +
-                                '<td><a href="javascript:void(0)" id="pe_remove_' + key + '" class="pe-removebtn btn btn-sm btn-icon btn-danger" row="' + key + '"><span class="btn-inner">X</span></a></td>' +
-                            '</tr>';
-                        $tbody.append(rowHtml);
-                    });
-                }
-
-                function activatePeTab(type) {
-                    changePeTabValue(type || 'sets');
-                    if (type === 'duration') {
-                        $('#pe-tab-duration').tab('show');
-                    } else {
-                        $('#pe-tab-sets').tab('show');
-                    }
-                }
-
-                function fillPackageExercise(data) {
-                    $('#package-exercise-section').removeClass('d-none');
-                    $('#pe_title').val(data.title || '');
-                    setSelectValue($('#pe_video_type'), data.video_type || 'url');
-                    $('#pe_video_url').val(data.video_url || '');
-                    setSelectValue($('#pe_status'), data.status || 'active');
-                    $('#pe_is_premium').prop('checked', parseInt(data.is_premium, 10) === 1);
-                    $('#pe_seconds_per_rep').val(data.seconds_per_rep || '');
-
-                    if (data.based === 'time') {
-                        $('#pe-based-time').prop('checked', true).trigger('change');
-                    } else {
-                        $('#pe-based-reps').prop('checked', true).trigger('change');
-                    }
-
-                    activatePeTab(data.type || 'sets');
-                    renderPeSets(data.sets || []);
-                    setSelectValue($('#pe_hours'), data.hours);
-                    setSelectValue($('#pe_minute'), data.minute);
-                    setSelectValue($('#pe_second'), data.second);
-                    setTinyContent('#pe_instruction', data.instruction || '');
-                    setTinyContent('#pe_tips', data.tips || '');
-                    togglePeVideoFields(data.video_type || 'url');
-                }
-
-                $('#exercise_id').on('change', function () {
-                    var exerciseId = $(this).val();
-                    if (!exerciseId) {
-                        $('#package-exercise-section').addClass('d-none');
-                        return;
-                    }
-
-                    $.get(exerciseDataUrl + '/' + exerciseId)
-                        .done(function (data) {
-                            fillPackageExercise(data);
-                        })
-                        .fail(function () {
-                            alert('Failed to load exercise data.');
+                $.get(exerciseDataUrl + '/' + exId, function(data) {
+                    $block.find('.exercise-override-section').removeClass('d-none');
+                    $block.find('.pe_title').val(data.title);
+                    $block.find('.pe_video_type').val(data.video_type || 'url').trigger('change');
+                    $block.find('.pe_video_url').val(data.video_url);
+                    $block.find('.pe_is_premium').prop('checked', data.is_premium == 1);
+                    
+                    // Populate sets
+                    let tbody = $block.find('.sets-table tbody');
+                    tbody.empty();
+                    if (data.sets && data.sets.length > 0) {
+                        data.sets.forEach(function(set) {
+                            let rowHtml = `
+                                <tr>
+                                    <td><input type="number" name="exercises[${index}][pe_reps][]" value="${set.reps || ''}" class="form-control form-control-sm"></td>
+                                    <td><input type="number" name="exercises[${index}][pe_time][]" value="${set.time || ''}" class="form-control form-control-sm"></td>
+                                    <td><input type="number" name="exercises[${index}][pe_weight][]" value="${set.weight || ''}" class="form-control form-control-sm"></td>
+                                    <td><input type="number" name="exercises[${index}][pe_rest][]" value="${set.rest || ''}" class="form-control form-control-sm"></td>
+                                    <td><button type="button" class="btn btn-sm btn-danger remove-set">X</button></td>
+                                </tr>
+                            `;
+                            tbody.append(rowHtml);
                         });
+                    } else {
+                        $block.find('.add-set-btn').trigger('click');
+                    }
                 });
             });
-        })(jQuery);
-    </script>
+        }
+
+        // Add new block
+        $('#add-exercise-btn').on('click', function() {
+            let num = exerciseIndex + 1;
+            let html = exerciseTemplate.replace(/__INDEX__/g, exerciseIndex).replace(/__NUM__/g, num);
+            let $block = $(html);
+            $('#exercises-container').append($block);
+            initBlock($block);
+            exerciseIndex++;
+        });
+
+        // Remove block
+        $(document).on('click', '.remove-exercise', function() {
+            if(confirm('Are you sure you want to remove this exercise?')) {
+                let $block = $(this).closest('.exercise-block');
+                // Destroy tinymce instances before removing
+                $block.find('textarea').each(function() {
+                    tinymce.remove(this);
+                });
+                $block.remove();
+            }
+        });
+
+        // Initialize existing blocks on load
+        $('.exercise-block').each(function() {
+            initBlock($(this));
+        });
+
+        // Trigger add button if empty on create
+        if ($('#exercises-container').children().length === 0) {
+            $('#add-exercise-btn').trigger('click');
+        }
+    })(jQuery);
+</script>
 @endpush
 
 <x-app-layout :assets="$assets ?? []">
     <div>
-        <?php
-            $id = $id ?? null;
-            $packageExercise = $packageExercise ?? (isset($data) ? ($data->packageExercise ?? null) : null);
-            if (!$packageExercise) {
-                $packageExercise = new \App\Models\PackageExercise([
-                    'title' => old('pe_title'),
-                    'instruction' => old('pe_instruction'),
-                    'tips' => old('pe_tips'),
-                    'video_type' => old('pe_video_type', 'url'),
-                    'video_url' => old('pe_video_url'),
-                    'status' => old('pe_status', 'active'),
-                    'is_premium' => old('pe_is_premium', 0),
-                    'type' => old('pe_type', 'sets'),
-                    'based' => old('pe_based', 'reps'),
-                    'seconds_per_rep' => old('pe_seconds_per_rep'),
-                    'duration' => old('pe_duration'),
-                    'sets' => [],
-                ]);
-            }
-            $selectedUsers = old('users', isset($data) ? $data->users()->pluck('users.id')->toArray() : []);
-            $peDuration = $packageExercise->duration != null ? explode(':', $packageExercise->duration) : null;
-            $peType = old('pe_type', $packageExercise->type != null ? $packageExercise->type : 'sets');
-            $peBased = old('pe_based', $packageExercise->based != null ? $packageExercise->based : 'reps');
-            $peSets = old('pe_reps')
-                ? collect(old('pe_reps'))->map(function ($reps, $i) {
-                    return [
-                        'reps' => $reps,
-                        'time' => old('pe_time.' . $i),
-                        'weight' => old('pe_weight.' . $i),
-                        'rest' => old('pe_rest.' . $i),
-                    ];
-                })->all()
-                : ($packageExercise->sets ?? []);
-            $showPeSection = isset($id) || old('exercise_id') || old('pe_title');
-        ?>
         @if(isset($id))
             {{ html()->modelForm($data, 'PATCH', route('package.update', $id) )->attribute('enctype', 'multipart/form-data')->open() }}
         @else
             {{ html()->form('POST', route('package.store'))->attribute('enctype', 'multipart/form-data')->open() }} 
         @endif
-        {{ html()->hidden('pe_type', $peType) }}
+        
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
@@ -260,17 +317,16 @@
                     </div>
 
                     <div class="card-body">
+                        <!-- MAIN PACKAGE FIELDS -->
                         <div class="row">
                             <div class="form-group col-md-4">
                                 {{ html()->label(__('message.name') . ' <span class="text-danger">*</span>', 'name')->class('form-control-label') }}
                                 {{ html()->text('name')->placeholder(__('message.name'))->class('form-control')->attribute('required','required') }}
                             </div>
-
                             <div class="form-group col-md-4">
                                 {{ html()->label(__('message.duration_unit'))->class('form-control-label') }}
                                 {{ html()->select('duration_unit',[ 'monthly' => __('message.monthly'), 'yearly' => __('message.yearly') ], old('duration_unit'))->class('form-control select2js')->attribute('required', 'required') }}
                             </div>
-
                             <div class="form-group col-md-4">
                                 {{ html()->label(__('message.duration').' <span class="text-danger">*</span>')->class('form-control-label') }}
                                 {{ html()->select('duration', ['1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5', '6' => '6', '7' => '7', '8' => '8', '9' => '9', '10' => '10', '11' => '11', '12' => '12' ], old('duration'))->class('form-control select2js')->attribute('required', 'required') ->id('duration') }}
@@ -283,16 +339,6 @@
                                 {{ html()->label(__('message.advice'))->class('form-control-label') }}
                                 {{ html()->select('advice_id', $advices, old('advice_id'))->class('form-control select2js')->attribute('required', 'required') }}
                             </div>
-                            <div class="form-group col-md-4">
-                                {{ html()->label(__('message.exercise'))->class('form-control-label') }}
-                                {{ html()->select('exercise_id', $exercises, old('exercise_id'))->id('exercise_id')->class('form-control select2js')->attribute('required', 'required') }}
-                                @if(isset($id))
-                                    <small class="text-muted">{{ __('message.package_exercise_replace_note') }}</small>
-                                @else
-                                    <small class="text-muted">{{ __('message.package_exercise_clone_note') }}</small>
-                                @endif
-                            </div>
-
                             <div class="form-group col-md-4">
                                 {{ html()->label(__('message.price').' <span class="text-danger">(AED)*</span>')->class('form-control-label') }}
                                 {{ html()->number('price', old('price'))->class('form-control')->attribute('min', 0)->attribute('step', 'any')->attribute('required', 'required')->placeholder(__('message.price')) }}
@@ -319,217 +365,131 @@
                             </div>
                         </div>
 
-                        <div id="package-exercise-section" class="{{ $showPeSection ? '' : 'd-none' }}">
-                            <hr>
-                            <h5 class="mb-3">{{ __('message.package_exercise') }}</h5>
-                            <div class="row">
-                                <div class="form-group col-md-4">
-                                    {{ html()->label(__('message.title'), 'pe_title')->class('form-control-label') }}
-                                    {{ html()->text('pe_title', old('pe_title', $packageExercise->title))->id('pe_title')->class('form-control')->placeholder(__('message.title')) }}
-                                </div>
-                                <div class="form-group col-md-4">
-                                    {{ html()->label(__('message.video_type'), 'pe_video_type')->class('form-control-label') }}
-                                    {{ html()->select('pe_video_type', ['url' => __('message.url'), 'upload_video' => __('message.upload_video')], old('pe_video_type', $packageExercise->video_type))->id('pe_video_type')->class('form-control select2js') }}
-                                </div>
-                                <div class="form-group col-md-4 pe-video-url">
-                                    {{ html()->label(__('message.video_url'), 'pe_video_url')->class('form-control-label') }}
-                                    {{ html()->text('pe_video_url', old('pe_video_url', $packageExercise->video_url))->id('pe_video_url')->class('form-control')->placeholder(__('message.video_url')) }}
-                                </div>
-                                <div class="form-group col-md-4">
-                                    {{ html()->label(__('message.status'), 'pe_status')->class('form-control-label') }}
-                                    {{ html()->select('pe_status', ['active' => __('message.active'), 'inactive' => __('message.inactive')], old('pe_status', $packageExercise->status))->id('pe_status')->class('form-control select2js') }}
-                                </div>
-                                <div class="form-group col-md-4">
-                                    {{ html()->label(__('message.is_premium'), 'pe_is_premium')->class('form-control-label') }}
-                                    <div class="form-check">
-                                        {!! html()->hidden('pe_is_premium', 0)->class('form-check-input') !!}
-                                        {!! html()->checkbox('pe_is_premium', (bool) old('pe_is_premium', $packageExercise->is_premium), 1)->id('pe_is_premium')->class('form-check-input') !!}
+                        <!-- MULTIPLE EXERCISES SECTION -->
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4>{{ __('message.package_exercise') }}</h4>
+                            <button type="button" id="add-exercise-btn" class="btn btn-sm btn-success">+ Add Exercise</button>
+                        </div>
+                        
+                        <div id="exercises-container">
+                            <!-- Render existing exercises (Edit Mode) -->
+                            @foreach($existingExercises as $index => $ex)
+                                <div class="exercise-block border p-3 mb-3 bg-light rounded" data-index="{{ $index }}">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="mb-0 text-primary">Exercise #{{ $index + 1 }}</h5>
+                                        <button type="button" class="btn btn-sm btn-danger remove-exercise">Remove</button>
                                     </div>
-                                </div>
-                            </div>
-
-                            <h5 class="text-danger mt-3"><i><u>{{ __('message.notes')}}:</u></i> {{ __('message.exercise_info') }}</h5>
-                            <hr>
-
-                            <ul class="d-flex nav nav-pills nav-fill mb-3 text-center exercise-tab" id="pe-exercise-pills-tab" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link {{ $peType == 'sets' ? 'active show' : '' }}" id="pe-tab-sets" data-bs-toggle="tab" href="#pe-exercise-sets" data-type="sets" role="tab" aria-selected="{{ $peType == 'sets' ? 'true' : 'false' }}">{{ __('message.sets') }}</a>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link {{ $peType == 'duration' ? 'active show' : '' }}" id="pe-tab-duration" data-bs-toggle="tab" href="#pe-exercise-duration" data-type="duration" role="tab" aria-selected="{{ $peType == 'duration' ? 'true' : 'false' }}" tabindex="-1">{{ __('message.duration') }}</a>
-                                </li>
-                            </ul>
-
-                            <div class="exercise-content tab-content">
-                                <div id="pe-exercise-sets" class="tab-pane fade {{ $peType == 'sets' ? 'active show' : '' }}" role="tabpanel">
-                                    <div class="row pe-normal-row">
-                                        <div class="col-md-2">
-                                            <h5 class="mb-3">{{__('message.sets')}}</h5>
+                                    <div class="row">
+                                        <div class="form-group col-md-6">
+                                            <label class="form-control-label">Select Exercise <span class="text-danger">*</span></label>
+                                            <select name="exercises[{{ $index }}][exercise_id]" class="form-control select2js exercise-select" required>
+                                                <option value="">Select</option>
+                                                @foreach($exercises as $exId => $exTitle)
+                                                    <option value="{{ $exId }}" {{ ($ex['exercise_id'] ?? '') == $exId ? 'selected' : '' }}>{{ $exTitle }}</option>
+                                                @endforeach
+                                            </select>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="form-check">
-                                                <div class="custom-control custom-radio d-inline-block col-4">
-                                                    <label class="form-check-label" for="pe-based-reps"> {{__('message.reps')}}(x)</label>
-                                                    {{ html()->radio('pe_based', $peBased == 'reps', 'reps')->class('form-check-input')->id('pe-based-reps') }}
-                                                </div>
-                                                <div class="custom-control custom-radio d-inline-block col-4">
-                                                    <label class="form-check-label" for="pe-based-time"> {{__('message.time')}}(s)</label>
-                                                    {{ html()->radio('pe_based', $peBased == 'time', 'time')->class('form-check-input')->id('pe-based-time') }}
+                                    </div>
+                                    
+                                    <div class="exercise-override-section {{ empty($ex['exercise_id']) ? 'd-none' : '' }} mt-3">
+                                        <div class="row">
+                                            <div class="form-group col-md-4">
+                                                <label class="form-control-label">Title Override</label>
+                                                <input type="text" name="exercises[{{ $index }}][pe_title]" value="{{ $ex['pe_title'] ?? '' }}" class="form-control pe_title">
+                                            </div>
+                                            <div class="form-group col-md-4">
+                                                <label class="form-control-label">Video Type</label>
+                                                <select name="exercises[{{ $index }}][pe_video_type]" class="form-control pe_video_type">
+                                                    <option value="url" {{ ($ex['pe_video_type'] ?? '') == 'url' ? 'selected' : '' }}>URL</option>
+                                                    <option value="upload_video" {{ ($ex['pe_video_type'] ?? '') == 'upload_video' ? 'selected' : '' }}>Upload Video</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group col-md-4 pe-video-url" style="{{ ($ex['pe_video_type'] ?? 'url') == 'upload_video' ? 'display:none;' : '' }}">
+                                                <label class="form-control-label">Video URL</label>
+                                                <input type="text" name="exercises[{{ $index }}][pe_video_url]" value="{{ $ex['pe_video_url'] ?? '' }}" class="form-control pe_video_url">
+                                            </div>
+                                            <div class="form-group col-md-4">
+                                                <label class="form-control-label">Status</label>
+                                                <select name="exercises[{{ $index }}][pe_status]" class="form-control pe_status">
+                                                    <option value="active" {{ ($ex['pe_status'] ?? '') == 'active' ? 'selected' : '' }}>Active</option>
+                                                    <option value="inactive" {{ ($ex['pe_status'] ?? '') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group col-md-4">
+                                                <label class="form-control-label d-block">Is Premium</label>
+                                                <div class="form-check form-switch mt-2">
+                                                    <input type="hidden" name="exercises[{{ $index }}][pe_is_premium]" value="0">
+                                                    <input type="checkbox" name="exercises[{{ $index }}][pe_is_premium]" value="1" class="form-check-input pe_is_premium" {{ !empty($ex['pe_is_premium']) ? 'checked' : '' }}>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group pe-reps-time-row">
-                                                <div class="input-group input-group-sm">
-                                                    {{ html()->number('pe_seconds_per_rep', old('pe_seconds_per_rep', $packageExercise->seconds_per_rep))->id('pe_seconds_per_rep')->placeholder(__('message.seconds_per_rep'))->class('form-control')->attribute('min', 0) }}
-                                                    <span class="input-group-text text-danger" data-bs-toggle="tooltip" title="{{ __('message.seconds_per_rep_help') }}">
-                                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M16.334 2.75H7.665C4.644 2.75 2.75 4.889 2.75 7.916V16.084C2.75 19.111 4.635 21.25 7.665 21.25H16.333C19.364 21.25 21.25 19.111 21.25 16.084V7.916C21.25 4.889 19.364 2.75 16.334 2.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                            <path d="M11.9946 16V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                            <path d="M11.9896 8.2041H11.9996" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                        </svg>
-                                                    </span>
+
+                                        <ul class="nav nav-pills nav-fill mb-3 exercise-tab" role="tablist">
+                                            <li class="nav-item"><a class="nav-link {{ ($ex['pe_type'] ?? 'sets') == 'sets' ? 'active' : '' }}" data-bs-toggle="tab" href="#sets_{{ $index }}" data-type="sets">Sets</a></li>
+                                            <li class="nav-item"><a class="nav-link {{ ($ex['pe_type'] ?? '') == 'duration' ? 'active' : '' }}" data-bs-toggle="tab" href="#duration_{{ $index }}" data-type="duration">Duration</a></li>
+                                        </ul>
+                                        <input type="hidden" name="exercises[{{ $index }}][pe_type]" class="pe_type" value="{{ $ex['pe_type'] ?? 'sets' }}">
+
+                                        <div class="tab-content">
+                                            <div id="sets_{{ $index }}" class="tab-pane fade {{ ($ex['pe_type'] ?? 'sets') == 'sets' ? 'show active' : '' }}">
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="form-check">
+                                                            <input type="radio" name="exercises[{{ $index }}][pe_based]" value="reps" class="form-check-input pe_based" {{ ($ex['pe_based'] ?? 'reps') == 'reps' ? 'checked' : '' }}>
+                                                            <label class="form-check-label">Reps</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input type="radio" name="exercises[{{ $index }}][pe_based]" value="time" class="form-check-input pe_based" {{ ($ex['pe_based'] ?? '') == 'time' ? 'checked' : '' }}>
+                                                            <label class="form-check-label">Time</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4 pe-reps-time-row" style="{{ ($ex['pe_based'] ?? 'reps') == 'time' ? 'display:none;' : '' }}">
+                                                        <input type="number" name="exercises[{{ $index }}][pe_seconds_per_rep]" value="{{ $ex['pe_seconds_per_rep'] ?? '' }}" class="form-control pe_seconds_per_rep" placeholder="Seconds per rep">
+                                                    </div>
+                                                    <div class="col-md-4 text-end">
+                                                        <button type="button" class="btn btn-sm btn-primary add-set-btn">Add Set</button>
+                                                    </div>
+                                                </div>
+                                                <table class="table table-sm mt-2 sets-table">
+                                                    <thead><tr><th>Reps</th><th>Time</th><th>Weight</th><th>Rest</th><th></th></tr></thead>
+                                                    <tbody>
+                                                        @if(!empty($ex['pe_reps']))
+                                                            @foreach($ex['pe_reps'] as $k => $rep)
+                                                                <tr>
+                                                                    <td><input type="number" name="exercises[{{ $index }}][pe_reps][]" value="{{ $rep }}" class="form-control form-control-sm"></td>
+                                                                    <td><input type="number" name="exercises[{{ $index }}][pe_time][]" value="{{ $ex['pe_time'][$k] ?? '' }}" class="form-control form-control-sm"></td>
+                                                                    <td><input type="number" name="exercises[{{ $index }}][pe_weight][]" value="{{ $ex['pe_weight'][$k] ?? '' }}" class="form-control form-control-sm"></td>
+                                                                    <td><input type="number" name="exercises[{{ $index }}][pe_rest][]" value="{{ $ex['pe_rest'][$k] ?? '' }}" class="form-control form-control-sm"></td>
+                                                                    <td><button type="button" class="btn btn-sm btn-danger remove-set">X</button></td>
+                                                                </tr>
+                                                            @endforeach
+                                                        @endif
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div id="duration_{{ $index }}" class="tab-pane fade {{ ($ex['pe_type'] ?? '') == 'duration' ? 'show active' : '' }}">
+                                                <div class="row">
+                                                    <div class="col-md-4"><input type="number" name="exercises[{{ $index }}][pe_hours]" value="{{ $ex['pe_hours'] ?? '' }}" class="form-control pe_hours" placeholder="Hours"></div>
+                                                    <div class="col-md-4"><input type="number" name="exercises[{{ $index }}][pe_minute]" value="{{ $ex['pe_minute'] ?? '' }}" class="form-control pe_minute" placeholder="Minutes"></div>
+                                                    <div class="col-md-4"><input type="number" name="exercises[{{ $index }}][pe_second]" value="{{ $ex['pe_second'] ?? '' }}" class="form-control pe_second" placeholder="Seconds"></div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
-                                            <button type="button" id="pe_add_button" class="btn btn-sm btn-primary float-end me-2">{{ __('message.add',['name' => '']) }}</button>
-                                            <a id="pe_sets_clear" class="float-end me-2" href="javascript:void(0)" title="{{ __('message.clear_sets') }}">{{ __('message.l_clear') }}</a>
-                                        </div>
-                                        <div class="col-md-12">
-                                            <table id="pe_table_list" class="table table-responsive">
-                                                <thead>
-                                                    <tr>
-                                                        <th class="col-md-3">{{ __('message.reps') }}<span>(x)</span></th>
-                                                        <th class="col-md-3">{{ __('message.time') }}(s)</th>
-                                                        <th class="col-md-3 weight">{{ __('message.weight') }}<span>(kg)</span></th>
-                                                        <th class="col-md-3">{{ __('message.rest') }}<span>(s)</span></th>
-                                                        <th class="col-md-1">{{ __('message.action') }}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @if(!empty($peSets) && count($peSets) > 0)
-                                                        @foreach($peSets as $key => $field)
-                                                            <tr id="pe_row_{{ $key }}" row="{{ $key }}" data-id="{{ $key }}">
-                                                                <td>
-                                                                    <div class="form-group">
-                                                                        {{ html()->number('pe_reps[]', $field['reps'] ?? null)->placeholder(__('message.reps'))->class('form-control')->attribute('min', 0) }}
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    <div class="form-group">
-                                                                        {{ html()->number('pe_time[]', $field['time'] ?? null)->placeholder(__('message.time'))->class('form-control')->attribute('min', 0) }}
-                                                                    </div>
-                                                                </td>
-                                                                <td class="weight">
-                                                                    <div class="form-group">
-                                                                        {{ html()->number('pe_weight[]', $field['weight'] ?? null)->placeholder(__('message.weight'))->class('form-control')->attribute('min', 0) }}
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    <div class="form-group">
-                                                                        {{ html()->number('pe_rest[]', $field['rest'] ?? null)->placeholder(__('message.rest'))->class('form-control')->attribute('min', 0) }}
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    <a href="javascript:void(0)" id="pe_remove_{{ $key }}" class="pe-removebtn btn btn-sm btn-icon btn-danger" row="{{ $key }}">
-                                                                        <span class="btn-inner">
-                                                                            <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
-                                                                                <path d="M19.3248 9.46826C19.3248 9.46826 18.7818 16.2033 18.4668 19.0403C18.3168 20.3953 17.4798 21.1893 16.1088 21.2143C13.4998 21.2613 10.8878 21.2643 8.27979 21.2093C6.96079 21.1823 6.13779 20.3783 5.99079 19.0473C5.67379 16.1853 5.13379 9.46826 5.13379 9.46826" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                                                <path d="M20.708 6.23975H3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                                                <path d="M17.4406 6.23973C16.6556 6.23973 15.9796 5.68473 15.8256 4.91573L15.5826 3.69973C15.4326 3.13873 14.9246 2.75073 14.3456 2.75073H10.1126C9.53358 2.75073 9.02558 3.13873 8.87558 3.69973L8.63258 4.91573C8.47858 5.68473 7.80258 6.23973 7.01758 6.23973" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </a>
-                                                                </td>
-                                                            </tr>
-                                                        @endforeach
-                                                    @else
-                                                        <tr id="pe_row_0" row="0" data-id="0">
-                                                            <td>
-                                                                <div class="form-group">
-                                                                    {{ html()->number('pe_reps[]', null)->placeholder(__('message.reps'))->class('form-control')->attribute('min', 0) }}
-                                                                </div>
-                                                            </td>
-                                                            <td>
-                                                                <div class="form-group">
-                                                                    {{ html()->number('pe_time[]', null)->placeholder(__('message.time'))->class('form-control')->attribute('min', 0) }}
-                                                                </div>
-                                                            </td>
-                                                            <td class="weight">
-                                                                <div class="form-group">
-                                                                    {{ html()->number('pe_weight[]', null)->placeholder(__('message.weight'))->class('form-control')->attribute('min', 0) }}
-                                                                </div>
-                                                            </td>
-                                                            <td>
-                                                                <div class="form-group">
-                                                                    {{ html()->number('pe_rest[]', null)->placeholder(__('message.rest'))->class('form-control')->attribute('min', 0) }}
-                                                                </div>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)" id="pe_remove_0" class="pe-removebtn btn btn-sm btn-icon btn-danger" row="0">
-                                                                    <span class="btn-inner">
-                                                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
-                                                                            <path d="M19.3248 9.46826C19.3248 9.46826 18.7818 16.2033 18.4668 19.0403C18.3168 20.3953 17.4798 21.1893 16.1088 21.2143C13.4998 21.2613 10.8878 21.2643 8.27979 21.2093C6.96079 21.1823 6.13779 20.3783 5.99079 19.0473C5.67379 16.1853 5.13379 9.46826 5.13379 9.46826" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                                            <path d="M20.708 6.23975H3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                                            <path d="M17.4406 6.23973C16.6556 6.23973 15.9796 5.68473 15.8256 4.91573L15.5826 3.69973C15.4326 3.13873 14.9246 2.75073 14.3456 2.75073H10.1126C9.53358 2.75073 9.02558 3.13873 8.87558 3.69973L8.63258 4.91573C8.47858 5.68473 7.01758 6.23973" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                                        </svg>
-                                                                    </span>
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    @endif
-                                                </tbody>
-                                            </table>
+
+                                        <div class="row mt-3">
+                                            <div class="col-md-6">
+                                                <label class="form-control-label">Instruction</label>
+                                                <textarea name="exercises[{{ $index }}][pe_instruction]" class="form-control tinymce-instruction">{{ $ex['pe_instruction'] ?? '' }}</textarea>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-control-label">Tips</label>
+                                                <textarea name="exercises[{{ $index }}][pe_tips]" class="form-control tinymce-tips">{{ $ex['pe_tips'] ?? '' }}</textarea>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <div id="pe-exercise-duration" class="tab-pane fade {{ $peType == 'duration' ? 'active show' : '' }}" role="tabpanel">
-                                    <div class="row pe-duration-row">
-                                        <h5 class="mb-3">{{__('message.duration')}}
-                                            <a id="pe_duration_clear" class="float-end" href="javascript:void(0)" title="{{ __('message.clear_duration') }}">{{ __('message.l_clear') }}</a>
-                                        </h5>
-                                        <div class="form-group col-md-2">
-                                            {{ html()->label(__('message.hours'))->class('form-control-label')}}
-                                            {{ html()->select('pe_hours', isset($peDuration[0]) ? [ $peDuration[0] => $peDuration[0] ] : [], old('pe_hours', $peDuration[0] ?? null))
-                                                ->id('pe_hours')
-                                                ->class('form-control select2js')
-                                                ->attribute('data-placeholder', __('message.select_name', ['select' => __('message.hours')]))
-                                                ->attribute('data-ajax--url', route('ajax-list', ['type' => 'hours']))
-                                            }}
-                                        </div>
-                                        <div class="form-group col-md-2">
-                                            {{ html()->label(__('message.minute'))->class('form-control-label')}}
-                                            {{ html()->select('pe_minute', isset($peDuration[1]) ? [$peDuration[1] => $peDuration[1]] : [], old('pe_minute', $peDuration[1] ?? null))
-                                                ->id('pe_minute')
-                                                ->class('form-control select2js')
-                                                ->attribute('data-placeholder', __('message.select_name', ['select' => __('message.minute')]))
-                                                ->attribute('data-ajax--url', route('ajax-list', ['type' => 'minute']))
-                                            }}
-                                        </div>
-                                        <div class="form-group col-md-2">
-                                            {{ html()->label(__('message.second'))->class('form-control-label')}}
-                                            {{ html()->select('pe_second', isset($peDuration[2]) ? [$peDuration[2] => $peDuration[2]] : [], old('pe_second', $peDuration[2] ?? null))
-                                                ->id('pe_second')
-                                                ->class('form-control select2js')
-                                                ->attribute('data-placeholder', __('message.select_name', ['select' => __('message.second')]))
-                                                ->attribute('data-ajax--url', route('ajax-list', ['type' => 'second']))
-                                            }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr>
-                            <div class="form-group col-md-12">
-                                {{ html()->label(__('message.instruction'), 'pe_instruction')->class('form-control-label') }}
-                                {{ html()->textarea('pe_instruction', old('pe_instruction', $packageExercise->instruction))->id('pe_instruction')->class('form-control tinymce-pe-instruction') }}
-                            </div>
-                            <div class="form-group col-md-12">
-                                {{ html()->label(__('message.tips'), 'pe_tips')->class('form-control-label') }}
-                                {{ html()->textarea('pe_tips', old('pe_tips', $packageExercise->tips))->id('pe_tips')->class('form-control tinymce-pe-tips') }}
-                            </div>
+                            @endforeach
                         </div>
 
                         <hr>
