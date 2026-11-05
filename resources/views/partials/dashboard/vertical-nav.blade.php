@@ -173,7 +173,7 @@
                 ->data('permission', 'categorydiet-list')
                 ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
                 ->link->attr(['class' => activeRoute(route('categorydiet.index')) || request()->routeIs('categorydiet.create') || request()->routeIs('categorydiet.edit') ? 'nav-link active' : 'nav-link']);
-
+        /*
         $menu->add('<span class="item-name">'.__('message.advice').'</span>', ['class' => ''])
             ->prepend('<i class="icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -221,7 +221,7 @@
                 ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
                 ->link->attr(['class' => request()->routeIs('program.create') || request()->routeIs('program.edit') ? 'nav-link active' : 'nav-link']); 
 
-                
+            */    
         $menu->add('<span class="item-name">'.__('message.level').'</span>', ['class' => ''])
             ->prepend('<i class="icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -328,7 +328,7 @@
                 ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
                 ->link->attr(['class' => request()->routeIs('tags.*') ? 'nav-link active' : 'nav-link']);
 
-        $menu->add('<span class="item-name">'.__('message.package').'</span>', ['class' => ''])
+              $menu->add('<span class="item-name">'.__('message.program').'</span>', ['class' => ''])
                 ->prepend('<i class="icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect x="4.75" y="1.75" width="14.5" height="20.5" rx="1.25" stroke="currentColor" stroke-width="1.5"/>
@@ -342,16 +342,15 @@
                 ->link->attr(['class' => 'nav-link' ])
                 ->href('#package');
 
-            $menu->package->add('<span class="item-name">'.__('message.list_form_title',['form' => __('message.package')]).'</span>', ['route' => 'package.index'])
+            $menu->package->add('<span class="item-name">'.__('message.list_form_title',['form' => __('message.program')]).'</span>', ['route' => 'package.index'])
                 ->data('permission', 'package-list')
                 ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
                 ->link->attr(['class' => activeRoute(route('package.index')) ? 'nav-link active' : 'nav-link']);
 
-            $menu->package->add('<span class="item-name">'.__('message.add_form_title',['form' => __('message.package')]).'</span>', ['route' => 'package.create'])
+            $menu->package->add('<span class="item-name">'.__('message.add_form_title',['form' => __('message.program')]).'</span>', ['route' => 'package.create'])
                 ->data('permission', [ 'package-add', 'package-edit'])
                 ->prepend('<i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor"><g><circle cx="12" cy="12" r="8" fill="currentColor"></circle></g></svg></i>')
                 ->link->attr(['class' => request()->routeIs('package.create') || request()->routeIs('package.edit') ? 'nav-link active' : 'nav-link']);
-
 
         $menu->add('<span class="item-name">'.__('message.class_schedule').'</span>', ['class' => ''])
                 ->prepend('<i class="icon">
