@@ -645,4 +645,5 @@ return [
     'package_exercise_clone_note' => 'اختر تمريناً لتحميل نسخته وتعديلها قبل حفظ الباقة.',
     'based' => 'نوع الحساب',
     'analytics_overview' => 'نظرة عامة على التحليلات',
+    'is_apple' => 'is apple'
 ];

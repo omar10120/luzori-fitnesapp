@@ -11,7 +11,7 @@ class AppSetting extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
-    protected $fillable = [ 'site_name', 'site_email', 'site_description', 'site_copyright', 'facebook_url', 'twitter_url', 'linkedin_url' , 'language_option', 'contact_email', 'contact_number', 'instagram_url', 'help_support_url', 'color' ];
+    protected $fillable = [ 'site_name', 'site_email', 'site_description', 'site_copyright', 'facebook_url', 'twitter_url', 'linkedin_url' , 'language_option', 'contact_email', 'contact_number', 'instagram_url', 'help_support_url', 'color' ,'is_apple'];
 
 	public $timestamps = false;
 

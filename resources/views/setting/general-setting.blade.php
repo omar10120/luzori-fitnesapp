@@ -257,6 +257,15 @@
             </div>
         </div>
         <div class="form-group">
+            {{ html()->label(__('Enable Apple Login'))->class('col-sm-6 form-control-label')->for('is_apple') }}
+            <div class="col-sm-12">
+                <div class="form-check form-switch mt-2">
+                    {{ html()->hidden('is_apple', 0) }}
+                    {{ html()->checkbox('is_apple', (bool) old('is_apple', $settings->is_apple ?? true), 1)->id('is_apple')->class('form-check-input') }}
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
             {{ html()->label(__('message.help_support_url'))->class('col-sm-6 form-control-label')->for('help_support_url') }}
             <div class="col-sm-12">
                 {{ html()->text('help_support_url')->value($settings->help_support_url ?? '')->class('form-control')->placeholder(__('message.enter_name', ['name' => __('message.help_support_url')])) }}

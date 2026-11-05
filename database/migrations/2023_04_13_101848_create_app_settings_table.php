@@ -27,6 +27,7 @@ class CreateAppSettingsTable extends Migration
             $table->string('contact_email')->nullable();
             $table->string('contact_number')->nullable();
             $table->string('help_support_url')->nullable();
+            $table->boolean('is_apple')->default(true);
             $table->timestamps();
         });
     }
