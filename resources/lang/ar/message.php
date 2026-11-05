@@ -643,7 +643,9 @@ return [
     'package_exercise' => 'تمرين الباقة',
     'package_exercise_replace_note' => 'تغيير التمرين يستبدل نسخة تمرين الباقة بنسخة جديدة من التمرين المحدد.',
     'package_exercise_clone_note' => 'اختر تمريناً لتحميل نسخته وتعديلها قبل حفظ الباقة.',
+    
     'based' => 'نوع الحساب',
     'analytics_overview' => 'نظرة عامة على التحليلات',
-    'is_apple' => 'is apple'
+    'is_apple' => 'is apple',
+    'program_exercise' => 'program exercise'
 ];

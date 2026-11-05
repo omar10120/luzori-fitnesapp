@@ -18,7 +18,7 @@ class PackageController extends Controller
 {
     public function index(PackageDataTable $dataTable)
     {
-        $pageTitle = __('message.list_form_title',['form' => __('message.package')] );
+        $pageTitle = __('message.list_form_title',['form' => __('message.program')] );
         $auth_user = AuthHelper::authSession();
         if( !$auth_user->can('package-list') ) {
             $message = __('message.permission_denied_for_account');
@@ -26,7 +26,7 @@ class PackageController extends Controller
         }
         $assets = ['data-table'];
 
-        $headerAction = $auth_user->can('package-add') ? '<a href="'.route('package.create').'" class="btn btn-sm btn-primary" role="button">'.__('message.add_form_title', [ 'form' => __('message.package')]).'</a>' : '';
+        $headerAction = $auth_user->can('package-add') ? '<a href="'.route('package.create').'" class="btn btn-sm btn-primary" role="button">'.__('message.add_form_title', [ 'form' => __('message.program')]).'</a>' : '';
 
         return $dataTable->render('global.datatable', compact('pageTitle', 'auth_user', 'assets', 'headerAction'));
     }
@@ -37,7 +37,7 @@ class PackageController extends Controller
             $message = __('message.permission_denied_for_account');
             return redirect()->back()->withErrors($message);
         }
-        $pageTitle = __('message.add_form_title',[ 'form' => __('message.package')]);
+        $pageTitle = __('message.add_form_title',[ 'form' => __('message.program')]);
         $diets = Diet::where('status', 'active')->orderBy('title')->pluck('title', 'id');
         $advices = Advice::where('status', 1)->orderBy('name')->pluck('name', 'id');
         $exercises = Exercise::where('status', 'active')->orderBy('title')->pluck('title', 'id');
@@ -81,7 +81,7 @@ class PackageController extends Controller
             }
         });
 
-        return redirect()->route('package.index')->withSuccess(__('message.save_form', ['form' => __('message.package')]));
+        return redirect()->route('package.index')->withSuccess(__('message.save_form', ['form' => __('message.program')]));
     }
 
     public function getExerciseData($id)
@@ -125,7 +125,7 @@ class PackageController extends Controller
         // Change 'packageExercise' to 'packageExercises'
         $data = Package::with('packageExercises')->findOrFail($id); 
         
-        $pageTitle = __('message.update_form_title',[ 'form' => __('message.package') ]);
+        $pageTitle = __('message.update_form_title',[ 'form' => __('message.program') ]);
         $diets = Diet::where('status', 'active')->orderBy('title')->pluck('title', 'id');
         $advices = Advice::where('status', 1)->orderBy('name')->pluck('name', 'id');
         $exercises = Exercise::where('status', 'active')->orderBy('title')->pluck('title', 'id');
@@ -185,7 +185,7 @@ class PackageController extends Controller
             $package->packageExercises()->whereNotIn('exercise_id', $keptExerciseIds)->delete();
         });
 
-        return redirect()->route('package.index')->withSuccess(__('message.update_form',['form' => __('message.package')]));
+        return redirect()->route('package.index')->withSuccess(__('message.update_form',['form' => __('message.program')]));
     }
 
     public function destroy($id)
@@ -197,12 +197,12 @@ class PackageController extends Controller
 
         $package = Package::findOrFail($id);
         $status = 'errors';
-        $message = __('message.not_found_entry', ['name' => __('message.package')]);
+        $message = __('message.not_found_entry', ['name' => __('message.program')]);
 
         if($package != '') {
             $package->delete();
             $status = 'success';
-            $message = __('message.delete_form', ['form' => __('message.package')]);
+            $message = __('message.delete_form', ['form' => __('message.program')]);
         }
 
         if(request()->ajax()) {

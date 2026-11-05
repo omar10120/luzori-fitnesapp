@@ -671,5 +671,6 @@ return [
     'package_exercise_clone_note' => 'Select an exercise to load and edit its package exercise copy before saving.',
     'based' => 'Based',
     'analytics_overview' => 'Analytics Overview ',
-    'is_apple' => 'is apple'
+    'is_apple' => 'is apple',
+    'program_exercise' => 'Program Exercise',
 ];

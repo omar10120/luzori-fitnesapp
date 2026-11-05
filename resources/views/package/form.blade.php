@@ -445,11 +445,12 @@
                             <div class="col-md-12">
                                 <div class="alert alert-light d-flex align-items-center justify-content-between">
                                     <div>
-                                        <strong><i class="fas fa-copy"></i> Quick Add:</strong> Copy an existing package to use as a template.
+                                        <strong><i class="fas fa-copy"></i> Quick Add:</strong> Copy an existing program to use as a template.
+
                                     </div>
                                     <div style="width: 300px;">
                                         <select id="clone-package-select" class="form-control select2js">
-                                            <option value="">-- Select a Package to Clone --</option>
+                                            <option value="">-- Select a Program to Clone --</option>
                                             @foreach($existingPackages as $pkgId => $pkgName)
                                                 <option value="{{ $pkgId }}">{{ $pkgName }}</option>
                                             @endforeach
@@ -509,7 +510,7 @@
                         <!-- MULTIPLE EXERCISES SECTION -->
                         <hr>
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4>{{ __('message.package_exercise') }}</h4>
+                            <h4>{{ __('message.program_exercise') }}</h4>
                             <button type="button" id="add-exercise-btn" class="btn btn-sm btn-success">+ Add Exercise</button>
                         </div>
                         
