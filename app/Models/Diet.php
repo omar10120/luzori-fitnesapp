@@ -167,4 +167,8 @@ class Diet extends Model implements HasMedia
             )
             ->orderByDesc('assigned_at');
     }
+    public function dailyMails()
+    {
+        return $this->belongsToMany(DailyMail::class, 'daily_mail_diet');
+    }
 }

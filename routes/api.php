@@ -221,6 +221,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('ai-workout/start', [ API\AIFitnessController::class, 'startWorkout' ]);
     Route::post('ai-workout/stop', [ API\AIFitnessController::class, 'stopWorkout' ]);
 
+    Route::get('daily-mail-list', [ API\DailyMailController::class, 'index' ]);
+    Route::post('daily-mail-save', [ API\DailyMailController::class, 'store' ]);
+    Route::post('daily-mail-update', [ API\DailyMailController::class, 'update' ]);
+    Route::post('daily-mail-delete', [ API\DailyMailController::class, 'destroy' ]);
+
 });
 Route::get('laravel/exercise-config/{exercise}', [ API\AIFitnessController::class, 'getExerciseConfig' ]);
 Route::get('recipetag-list', [ API\RecipeTagController::class, 'getList' ]);
